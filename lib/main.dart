@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sn_pos/home/home_screen.dart';
-import 'package:sn_pos/login/login_screen.dart';
+import 'package:sn_pos/login/landing_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,11 +17,11 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: isLogin() ? const HomeScreen() : const LoginScreen(),
+      home: isLogin() ? const HomeScreen() : const LandingScreen(),
     );
   }
 
   bool isLogin() {
-    return true;
+    return false;
   }
 }
