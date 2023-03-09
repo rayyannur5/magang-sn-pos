@@ -1,18 +1,21 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:sn_pos/styles/general_button.dart';
 
 import '../styles/navigator.dart';
 
 class SendAbsenScreen extends StatefulWidget {
-  const SendAbsenScreen({super.key});
+  final String imagePath;
+  const SendAbsenScreen({super.key, required this.imagePath});
 
   @override
-  State<SendAbsenScreen> createState() => _SendAbsenScreenState();
+  State<SendAbsenScreen> createState() => _SendAbsenScreenState(imagePath);
 }
 
 class _SendAbsenScreenState extends State<SendAbsenScreen> {
+  final String imagePath;
+  _SendAbsenScreenState(this.imagePath);
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
@@ -21,7 +24,7 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            height: (size.height) / 5,
+            height: (size.height) / 6,
             alignment: Alignment.bottomLeft,
             padding: EdgeInsets.fromLTRB(size.width / 30, 0, size.width / 15, 10),
             child: Row(
@@ -40,7 +43,7 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
             child: SizedBox(
               height: size.height / 4,
               width: size.width / 2,
-              child: Icon(Icons.account_circle_outlined, size: size.width / 2),
+              child: Image.file(File(imagePath)),
             ),
           ),
           Padding(
@@ -54,7 +57,7 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
             child: DropdownButton(
               isExpanded: true,
               dropdownColor: Colors.amber,
-              hint: Text('  Pilih Outlet'),
+              hint: const Text('  Pilih Outlet'),
               underline: Container(
                 height: 40,
                 decoration: BoxDecoration(
@@ -100,7 +103,7 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                   width: size.width / 4,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
-                    color: Color(0xff0077B6),
+                    color: const Color(0xff0077B6),
                   ),
                   child: const Center(
                     child: Text(

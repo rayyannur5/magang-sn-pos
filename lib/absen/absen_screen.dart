@@ -12,7 +12,7 @@ class AbsenScreen extends StatelessWidget {
         body: Column(
       children: [
         Container(
-          height: (size.height) / 5,
+          height: (size.height) / 6,
           alignment: Alignment.bottomLeft,
           padding: EdgeInsets.fromLTRB(size.width / 15, 0, size.width / 15, 10),
           child: const Text('Absensi', style: TextStyle(fontFamily: 'Poppins', fontSize: 36, fontWeight: FontWeight.w800)),
@@ -36,7 +36,7 @@ class AbsenScreen extends StatelessWidget {
               ),
               const Spacer(),
               ElevatedButton(
-                  onPressed: () => Nav.push(context, CameraScreen()),
+                  onPressed: () => Nav.push(context, const CameraScreen()),
                   style: ButtonStyle(
                       shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(7.5))), backgroundColor: MaterialStateProperty.all(const Color(0xff0077B6))),
                   child: const Text(
@@ -87,15 +87,15 @@ class AbsenScreen extends StatelessWidget {
             ],
           ),
         ),
-        Container(
+        SizedBox(
           height: size.height - (size.height / 8) - ((size.height) / 5),
           child: ListView(
             children: [
-              cardAbsen(size),
-              cardAbsen(size),
-              cardAbsen(size),
-              cardAbsen(size),
-              cardAbsen(size),
+              cardLaporanAbsensi(size),
+              cardLaporanAbsensi(size),
+              cardLaporanAbsensi(size),
+              cardLaporanAbsensi(size),
+              cardLaporanAbsensi(size),
               const SizedBox(height: 300),
             ],
           ),
@@ -104,53 +104,74 @@ class AbsenScreen extends StatelessWidget {
     ));
   }
 
-  Container cardAbsen(Size size) {
+  Container cardLaporanAbsensi(Size size) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: 5),
+      padding: EdgeInsets.symmetric(horizontal: size.width / 15),
+      margin: const EdgeInsets.only(bottom: 15),
       child: Container(
-        height: 100,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: const [BoxShadow(blurRadius: 10, offset: Offset(0, 4), color: Colors.black26)],
-        ),
+        width: size.width,
+        height: size.height / 12,
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))]),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text('Tanggulangin', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w700)),
-                Text('Masuk : 06.43\nKeluar : 16.43', style: TextStyle(fontFamily: 'Poppins', fontSize: 14)),
-              ],
+            Container(
+              width: size.width / 2.3,
+              padding: EdgeInsets.only(left: size.width / 15),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text('Tanggulangin', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text('Masuk : 14/02/2023 06.53\nKeluar : 14/02/2023 16.53', style: TextStyle(fontFamily: 'Poppins', fontSize: 10)),
+                ],
+              ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      height: 30,
-                      width: 50,
-                      color: Colors.red,
+            Container(
+              width: size.width - (size.width / 2.3) - 2 * (size.width / 15),
+              padding: EdgeInsets.all(size.width / 35),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        height: size.height / 40,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.amber,
+                          borderRadius: BorderRadius.circular(7.5),
+                        ),
+                        child: const Center(child: Text('Shift 1', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700))),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        height: size.height / 40,
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(7.5),
+                        ),
+                        child: const Center(child: Text('Tepat waktu', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700))),
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    height: size.height / 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xff0077B6),
+                      borderRadius: BorderRadius.circular(7.5),
                     ),
-                    const SizedBox(width: 20),
-                    Container(
-                      height: 30,
-                      width: 50,
-                      color: Colors.red,
+                    child: const Center(
+                      child: Text(
+                        'Rp 6.000,00',
+                        style: TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
+                      ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  height: 30,
-                  width: 120,
-                  color: Colors.amber,
-                )
-              ],
-            ),
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),
