@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_pos/absen/camera_screen.dart';
+import 'package:http/http.dart' as http;
 import 'package:sn_pos/styles/navigator.dart';
+
+import '../constants.dart';
+import 'absen.dart';
 
 class AbsenScreen extends StatelessWidget {
   const AbsenScreen({super.key});
@@ -17,35 +22,48 @@ class AbsenScreen extends StatelessWidget {
           padding: EdgeInsets.fromLTRB(size.width / 15, 0, size.width / 15, 10),
           child: const Text('Absensi', style: TextStyle(fontFamily: 'Poppins', fontSize: 36, fontWeight: FontWeight.w800)),
         ),
-        Container(
-          height: size.height / 5,
-          width: size.width,
-          margin: EdgeInsets.symmetric(horizontal: size.width / 15),
-          padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: size.width / 20),
-          decoration: BoxDecoration(
-            color: const Color(0xffCAF0F8),
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: const [BoxShadow(blurRadius: 10, offset: Offset(0, 4), color: Colors.black26)],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Anda belum absen hari ini',
-                style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              const Spacer(),
-              ElevatedButton(
-                  onPressed: () => Nav.push(context, const CameraScreen()),
-                  style: ButtonStyle(
-                      shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(7.5))), backgroundColor: MaterialStateProperty.all(const Color(0xff0077B6))),
-                  child: const Text(
-                    'Absen Masuk',
-                    style: TextStyle(fontFamily: 'Poppins'),
-                  ))
-            ],
-          ),
-        ),
+        FutureBuilder<dynamic>(
+            future: Absen().cekAbsenHariIni(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+              print(snapshot.data);
+              return Container(
+                height: size.height / 5,
+                width: size.width,
+                margin: EdgeInsets.symmetric(horizontal: size.width / 15),
+                padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: size.width / 20),
+                decoration: BoxDecoration(
+                  color: const Color(0xffCAF0F8),
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: const [BoxShadow(blurRadius: 10, offset: Offset(0, 4), color: Colors.black26)],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      snapshot.data,
+                      style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    const Spacer(),
+                    snapshot.data != 'SUDAH_ABSEN_KELUAR'
+                        ? ElevatedButton(
+                            onPressed: () => Nav.push(context, const CameraScreen()),
+                            style: ButtonStyle(
+                                shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(7.5))),
+                                backgroundColor: MaterialStateProperty.all(const Color(0xff0077B6))),
+                            child: Text(
+                              snapshot.data == 'BELUM_ABSEN_MASUK'
+                                  ? 'Absen Masuk'
+                                  : snapshot.data == 'SUDAH_ABSEN_MASUK'
+                                      ? 'Absen Keluar'
+                                      : 'error',
+                              style: TextStyle(fontFamily: 'Poppins'),
+                            ))
+                        : const SizedBox(),
+                  ],
+                ),
+              );
+            }),
         Container(
           height: size.height / 8,
           width: size.width,

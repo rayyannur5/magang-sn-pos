@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sn_pos/home/checkout.dart';
+import 'package:sn_pos/home/itemProvider.dart';
 import 'package:sn_pos/menu.dart';
 import 'package:sn_pos/styles/general_button.dart';
 
 class SuccessTransactionScreen extends StatefulWidget {
-  const SuccessTransactionScreen({super.key});
-
+  const SuccessTransactionScreen({super.key, required this.cash});
+  final cash;
   @override
   State<SuccessTransactionScreen> createState() => _SuccessTransactionScreenState();
 }
@@ -41,7 +41,64 @@ class _SuccessTransactionScreenState extends State<SuccessTransactionScreen> {
                 ],
               ),
             ),
-            Spacer(),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: size.width / 15),
+              child: Row(
+                children: const [
+                  Text('Item', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            for (var i in itemManagement.getItemsSelected())
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: size.width / 15),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      // ignore: prefer_interpolation_to_compose_strings
+                      "\u2022  " + i['name'] + ' \u2715 ' + i['count'].toString(),
+                      style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
+                    ),
+                    Text(
+                      // ignore: prefer_interpolation_to_compose_strings
+                      'Rp ' + i['price'].toString(),
+                      style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w900),
+                    )
+                  ],
+                ),
+              ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Total', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600)),
+                  Text('Rp ${itemManagement.getPrice()}', style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600))
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: size.width / 15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Tunai/Cash', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600)),
+                  Text('Rp ${widget.cash}', style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600))
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: size.width / 15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Kembalian', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600)),
+                  Text('Rp ${widget.cash - itemManagement.getPrice()}', style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600))
+                ],
+              ),
+            ),
+            const Spacer(),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: size.width / 15),
               child: SizedBox(
@@ -63,7 +120,7 @@ class _SuccessTransactionScreenState extends State<SuccessTransactionScreen> {
                   onTap: () {
                     Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
                       itemManagement.reset();
-                      return MenuScreen();
+                      return MenuScreen(initialPage: 0);
                     }), (r) {
                       return false;
                     });

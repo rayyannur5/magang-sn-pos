@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sn_pos/home/itemProvider.dart';
+import 'package:sn_pos/login/auth.dart';
+import 'package:sn_pos/login/login_screen.dart';
 import 'package:sn_pos/profile/change_password_screen.dart';
 import 'package:sn_pos/profile/laporan_absensi_screen.dart';
 import 'package:sn_pos/profile/laporan_penjualan_screen.dart';
@@ -7,6 +12,14 @@ import 'package:sn_pos/styles/navigator.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  getDataPengguna() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    List data = [];
+    data.add(pref.getString('name'));
+    data.add(pref.getString('email'));
+    return data;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,14 +42,19 @@ class ProfileScreen extends StatelessWidget {
                   bottomLeft: Radius.circular(50),
                 ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Duwi Putra', style: TextStyle(fontFamily: 'Poppins', fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white)),
-                  Text('duwi_put@gmail.com', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
-                ],
-              ),
+              child: FutureBuilder<dynamic>(
+                  future: getDataPengguna(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) return const SizedBox();
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(snapshot.data[0], style: const TextStyle(fontFamily: 'Poppins', fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white)),
+                        Text(snapshot.data[1], style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
+                      ],
+                    );
+                  }),
             ),
             SizedBox(height: size.height / 20),
             Container(
@@ -125,8 +143,27 @@ class ProfileScreen extends StatelessWidget {
                 color: const Color(0xff0077B6),
                 borderRadius: BorderRadius.circular(15),
                 child: InkWell(
-                  onTap: () {},
-                  child: Container(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(title: const Text('Yakin logout ?'), actions: [
+                        TextButton(onPressed: () => Nav.pop(context), child: const Text('Batal')),
+                        Consumer<ItemManagement>(
+                          builder: (context, value, child) => TextButton(
+                              onPressed: () {
+                                value.setItems([], 0);
+                                Auth().logout().then((value) => Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
+                                      return const LoginScreen();
+                                    }), (r) {
+                                      return false;
+                                    }));
+                              },
+                              child: const Text('Logout')),
+                        ),
+                      ]),
+                    );
+                  },
+                  child: SizedBox(
                     height: size.height / 20,
                     width: size.width / 3,
                     child: Row(

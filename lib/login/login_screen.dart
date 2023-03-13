@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:sn_pos/login/auth.dart';
 import 'package:sn_pos/menu.dart';
+import 'package:sn_pos/no_internet_screen.dart';
 import 'package:sn_pos/styles/general_button.dart';
 import 'package:sn_pos/styles/navigator.dart';
 
@@ -12,6 +14,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool passwordVisible = false;
+  TextEditingController email = TextEditingController();
+  TextEditingController password = TextEditingController();
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
@@ -57,9 +61,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Text("Selamat Datang, ", style: TextStyle(fontFamily: 'Poppins', fontSize: 24, fontWeight: FontWeight.w700)),
                   const Text("Silahkan Login untuk melanjutkan", style: TextStyle(fontFamily: 'Poppins', fontSize: 12)),
                   const SizedBox(height: 50),
-                  const TextField(
-                    style: TextStyle(fontFamily: 'Poppins'),
-                    decoration: InputDecoration(
+                  TextField(
+                    controller: email,
+                    style: const TextStyle(fontFamily: 'Poppins'),
+                    decoration: const InputDecoration(
                       labelText: 'Email address',
                       border: OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xff0077B6)),
@@ -69,6 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 25),
                   TextField(
+                    controller: password,
                     style: const TextStyle(fontFamily: 'Poppins'),
                     obscureText: !passwordVisible,
                     decoration: InputDecoration(
@@ -89,7 +95,46 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 50),
-                  GeneralButton(text: 'Login', onTap: () => Nav.push(context, const MenuScreen())),
+                  GeneralButton(
+                      text: 'Login',
+                      onTap: () {
+                        if (email.text == '' || password.text == '') {
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  icon: Icon(Icons.warning, color: Colors.amber.shade800),
+                                  content: const Text('Email / Password tidak boleh kosong'),
+                                );
+                              });
+                          return;
+                        }
+
+                        Auth().login(email.text, password.text).then((value) => {
+                              if (value == '3')
+                                {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(icon: Icon(Icons.warning, color: Colors.amber.shade800), content: const Text('Email tidak ditemukan', textAlign: TextAlign.center));
+                                    },
+                                  )
+                                }
+                              else if (value == '2')
+                                {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(icon: Icon(Icons.warning, color: Colors.amber.shade800), content: const Text('Password salah', textAlign: TextAlign.center));
+                                    },
+                                  )
+                                }
+                              else if (value == '404')
+                                {Nav.materialPushReplacement(context, const NoInternetScreen())}
+                              else
+                                {Nav.materialPushReplacement(context, MenuScreen(initialPage: 0))}
+                            });
+                      }),
                 ],
               ))
         ],

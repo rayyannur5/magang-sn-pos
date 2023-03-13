@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sn_pos/home/checkout.dart';
-import 'package:sn_pos/home/home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sn_pos/home/itemProvider.dart';
+import 'package:sn_pos/login/auth.dart';
 import 'package:sn_pos/login/landing_screen.dart';
+import 'package:sn_pos/menu.dart';
+import 'package:sn_pos/no_internet_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,11 +24,25 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             primarySwatch: Colors.blue,
           ),
-          home: isLogin() ? const HomeScreen() : const LandingScreen()),
+          home: FutureBuilder<dynamic>(
+              future: isLogin(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+                // print(snapshot.data);
+                if (snapshot.data == '404') return const NoInternetScreen();
+                if (snapshot.data == '2' || snapshot.data == '3') return const LandingScreen();
+                return MenuScreen(initialPage: 0);
+              })),
     );
   }
 
-  bool isLogin() {
-    return false;
+  isLogin() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+
+    var email = pref.getString('email') ?? '';
+    var password = pref.getString('password') ?? '';
+    var response = await Auth().login(email, password);
+    // print(response);
+    return response;
   }
 }

@@ -1,11 +1,8 @@
-import 'dart:io';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sn_pos/absen/send_absen_screen.dart';
 
-import '../styles/navigator.dart';
+import '../menu.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -19,7 +16,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Future<void> initializeCamera() async {
     var cameras = await availableCameras();
-    controller = CameraController(cameras[1], ResolutionPreset.medium);
+    controller = CameraController(cameras[1], ResolutionPreset.low);
     await controller.initialize();
   }
 
@@ -57,7 +54,13 @@ class _CameraScreenState extends State<CameraScreen> {
                             height: 70,
                             width: 70,
                             child: IconButton(
-                                onPressed: () => Nav.pop(context),
+                                onPressed: () {
+                                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
+                                    return MenuScreen(initialPage: 1);
+                                  }), (r) {
+                                    return false;
+                                  });
+                                },
                                 icon: const Icon(
                                   Icons.cancel,
                                   color: Colors.white,
@@ -65,10 +68,36 @@ class _CameraScreenState extends State<CameraScreen> {
                                 )),
                           ),
                           const Spacer(),
-                          Container(
-                            height: 70,
-                            width: 70,
-                            decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.lightBlue, border: Border.all(color: Colors.white, strokeAlign: StrokeAlign.outside, width: 4)),
+                          GestureDetector(
+                            onTap: () async {
+                              // Take the Picture in a try / catch block. If anything goes wrong,
+                              // catch the error.
+                              print('take picture');
+                              try {
+                                // Attempt to take a picture and get the file `image`
+                                // where it was saved.
+                                final image = await controller.takePicture();
+
+                                if (!mounted) return;
+
+                                // If the picture was taken, display it on a new screen.
+                                await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => SendAbsenScreen(
+                                      imagePath: image.path,
+                                    ),
+                                  ),
+                                );
+                              } catch (e) {
+                                // If an error occurs, log the error to the console.
+                                print(e);
+                              }
+                            },
+                            child: Container(
+                              height: 70,
+                              width: 70,
+                              decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.lightBlue, border: Border.all(color: Colors.white, strokeAlign: StrokeAlign.outside, width: 4)),
+                            ),
                           ),
                           const Spacer(flex: 3)
                         ],
@@ -76,41 +105,15 @@ class _CameraScreenState extends State<CameraScreen> {
                     )
                   ],
                 ),
-                GestureDetector(
-                  onTap: () async {
-                    // Take the Picture in a try / catch block. If anything goes wrong,
-                    // catch the error.
-                    print('take picture');
-                    try {
-                      // Attempt to take a picture and get the file `image`
-                      // where it was saved.
-                      final image = await controller.takePicture();
-
-                      if (!mounted) return;
-
-                      // If the picture was taken, display it on a new screen.
-                      await Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => SendAbsenScreen(
-                            imagePath: image.path,
-                          ),
-                        ),
-                      );
-                    } catch (e) {
-                      // If an error occurs, log the error to the console.
-                      print(e);
-                    }
-                  },
-                ),
                 Container(
                   width: size.height,
                   height: size.width * controller.value.aspectRatio,
-                  decoration: BoxDecoration(image: DecorationImage(image: AssetImage('assets/image/face-screen.png'), fit: BoxFit.fill)),
+                  decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/image/face-screen.png'), fit: BoxFit.fill)),
                 ),
               ],
             );
           } else {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
         },
       ),
