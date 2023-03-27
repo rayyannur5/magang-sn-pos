@@ -4,10 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_pos/home/itemProvider.dart';
 import 'package:sn_pos/login/auth.dart';
 import 'package:sn_pos/login/login_screen.dart';
+import 'package:sn_pos/menu.dart';
 import 'package:sn_pos/profile/change_password_screen.dart';
-import 'package:sn_pos/profile/laporan_absensi_screen.dart';
-import 'package:sn_pos/profile/laporan_penjualan_screen.dart';
-import 'package:sn_pos/profile/laporan_setoran_screen.dart';
 import 'package:sn_pos/styles/navigator.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -64,7 +62,7 @@ class ProfileScreen extends StatelessWidget {
                 borderRadius: const BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15)),
                 child: InkWell(
                   borderRadius: const BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15)),
-                  onTap: () => Nav.push(context, const LaporanPenjualanScreen()),
+                  onTap: () => Nav.pushReplacement(context, MenuScreen(initialPage: 3)),
                   child: Container(
                     width: size.width,
                     height: size.height / 20,
@@ -83,7 +81,7 @@ class ProfileScreen extends StatelessWidget {
               child: Material(
                 color: Colors.white,
                 child: InkWell(
-                  onTap: () => Nav.push(context, const LaporanAbsensiScreen()),
+                  onTap: () => Nav.pushReplacement(context, MenuScreen(initialPage: 4)),
                   child: Container(
                     width: size.width,
                     height: size.height / 20,
@@ -102,7 +100,7 @@ class ProfileScreen extends StatelessWidget {
               child: Material(
                 color: Colors.white,
                 child: InkWell(
-                  onTap: () => Nav.push(context, const LaporanSetoranScreen()),
+                  onTap: () => Nav.pushReplacement(context, MenuScreen(initialPage: 5)),
                   child: Container(
                     width: size.width,
                     height: size.height / 20,

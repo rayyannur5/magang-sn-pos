@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:ftpconnect/ftpconnect.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -29,7 +30,6 @@ class Absen {
       var id_user = pref.getString('id_user');
       var store_id_active = pref.getString('store_id_active') ?? '0';
       var response = await http.post(Uri.parse(Constants.urlCekAbsensi), body: {'user_id': id_user, 'key': Constants.key});
-      print(store_id_active);
 
       if (response.body == '2') {
         return 'BELUM_ABSEN_MASUK';
@@ -66,7 +66,13 @@ class Absen {
     var second = date.second < 10 ? '0${date.second.toString()}' : date.second.toString();
 
     var namaGambar = '$id_user1000$year$month$day$hour$minute$second.jpg';
-    FTPConnect ftpConnect = FTPConnect('hifzanur.com', user: 'u431884832.rayyan_tes', pass: 'Unesa123');
+
+    var ftphost = pref.getString('ftp_server') ?? '191.101.230.27';
+    var ftpuser = pref.getString('ftp_username') ?? 'u431884832.rayyan_tes';
+    var ftppassword = pref.getString('ftp_password') ?? 'Unesa123';
+    int ftpport = int.parse(pref.getString('ftp_port') ?? '21');
+
+    FTPConnect ftpConnect = FTPConnect(ftphost, user: ftpuser, pass: ftppassword, port: ftpport);
     File fileToUpload = changeFileNameOnlySync(File(imagePath), namaGambar);
     showDialog(
       context: context,
@@ -143,7 +149,34 @@ class Absen {
         'shift': shift.toString(),
         'key': key,
       });
+
       return response.body;
+    } catch (e) {
+      return '404';
+    }
+  }
+
+  Future<bool> cekApakahAdaTransaksi() async {
+    var pref = await SharedPreferences.getInstance();
+    for (var i in pref.getKeys()) {
+      if (i.contains('TRX')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Future absensiReport(begin_date, end_date) async {
+    print('get absen report');
+    String formattedBeginDate = DateFormat('yyyy-MM-dd').format(begin_date);
+    String formattedEndDate = DateFormat('yyyy-MM-dd').format(end_date);
+
+    try {
+      var pref = await SharedPreferences.getInstance();
+      var id_user = pref.getString('id_user');
+      var response = await http.get(Uri.parse('${Constants.urlAbsensiReport}?key=${Constants.key}&user_id=$id_user&begin_date=$formattedBeginDate&end_date=$formattedEndDate'));
+      List dataAbsen = jsonDecode(response.body);
+      return dataAbsen;
     } catch (e) {
       return '404';
     }

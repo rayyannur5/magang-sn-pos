@@ -59,6 +59,5 @@ class ItemManagement extends ChangeNotifier {
     for (int i = 0; i < _banyakItems; i++) {
       _penghitungItem[i] = 0;
     }
-    _item = [];
   }
 }

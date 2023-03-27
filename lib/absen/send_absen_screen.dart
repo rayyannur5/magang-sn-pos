@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/scheduler.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ import 'package:sn_pos/styles/general_button.dart';
 
 import '../constants.dart';
 import '../menu.dart';
+import '../no_internet_screen.dart';
 import '../styles/navigator.dart';
 import 'absen.dart';
 
@@ -34,6 +36,16 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
           builder: (context, cekAbsen) {
             if (!cekAbsen.hasData) return const Center(child: CircularProgressIndicator());
             print(cekAbsen.data);
+            if (cekAbsen.data == '404' || cekAbsen.data == 'error') {
+              print('masuk sini');
+              SchedulerBinding.instance.addPostFrameCallback((_) {
+                Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
+                  return NoInternetScreen();
+                }), (r) {
+                  return false;
+                });
+              });
+            }
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -71,7 +83,20 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                         future: Absen().getOutlet(),
                         builder: (context, snapshot) {
                           if (!snapshot.hasData) return Container(width: size.width, height: 45, color: Colors.grey.shade100, margin: EdgeInsets.symmetric(horizontal: size.width / 15));
-                          dataOutlet = snapshot.data['data'];
+                          if (snapshot.data == '404') {
+                            SchedulerBinding.instance.addPostFrameCallback((_) {
+                              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
+                                return NoInternetScreen();
+                              }), (r) {
+                                return false;
+                              });
+                            });
+                          }
+                          try {
+                            dataOutlet = snapshot.data['data'];
+                          } catch (e) {
+                            dataOutlet = [];
+                          }
                           List<String> outlet = [];
                           outlet.add('Pilih Outlet');
                           for (int i = 0; i < dataOutlet.length; i++) {
@@ -241,6 +266,7 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                                 }
                               });
                             });
+
                             // Absen().sendAbsenKeluar(shift).then((value) {
                             //   if (value == 'out***') {
                             //     itemManagement.setItems([], 0);

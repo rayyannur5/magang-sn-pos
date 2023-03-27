@@ -24,30 +24,4 @@ class Item {
       return '404';
     }
   }
-
-  bayar(List item) async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    var id_user = pref.getString('id_user') ?? '0';
-    int id_user1000 = 1000 + int.parse(id_user);
-
-    var date = DateTime.now();
-    var year = date.year.toString();
-    var month = date.month < 10 ? '0${date.month.toString()}' : date.month.toString();
-    var day = date.day < 10 ? '0${date.day.toString()}' : date.day.toString();
-    var hour = date.hour < 10 ? '0${date.hour.toString()}' : date.hour.toString();
-    var minute = date.minute < 10 ? '0${date.minute.toString()}' : date.minute.toString();
-    var second = date.second < 10 ? '0${date.second.toString()}' : date.second.toString();
-
-    var id_trx = id_user1000.toString() + year + month + day + hour + minute + second;
-
-    String dataTerpilih = "";
-    for (int i = 0; i < item.length; i++) {
-      for (int j = 0; j < item[i]['count']; j++) {
-        dataTerpilih += '${item[i]['id_produk']}C';
-      }
-    }
-    print(dataTerpilih);
-
-    pref.setString('TRX-$id_trx', dataTerpilih);
-  }
 }

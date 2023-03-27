@@ -1,8 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:sn_pos/absen/absen.dart';
 import 'package:sn_pos/absen/absen_screen.dart';
 import 'package:sn_pos/home/home_screen.dart';
+import 'package:sn_pos/profile/laporan_absensi_screen.dart';
+import 'package:sn_pos/profile/laporan_penjualan_screen.dart';
+import 'package:sn_pos/profile/laporan_setoran_screen.dart';
 import 'package:sn_pos/profile/profile_screen.dart';
 import 'package:sn_pos/styles/navigator.dart';
 
@@ -21,8 +25,11 @@ class _MenuScreenState extends State<MenuScreen> {
 
   List screen = [
     HomeScreen(),
-    const AbsenScreen(),
+    AbsenScreen(),
     const ProfileScreen(),
+    LaporanPenjualanScreen(),
+    LaporanAbsensiScreen(),
+    LaporanSetoranScreen(),
   ];
 
   _MenuScreenState(this.initialPage) {
@@ -70,10 +77,16 @@ class _MenuScreenState extends State<MenuScreen> {
         floatingActionButton: FloatingActionButton(
           elevation: 10,
           onPressed: () {
-            setState(() {
-              currentScreen = const AbsenScreen();
-              currentTab = 2;
-            });
+            Absen().cekApakahAdaTransaksi().then(
+              (value) {
+                if (!value) {
+                  setState(() {
+                    currentScreen = const AbsenScreen();
+                    currentTab = 1;
+                  });
+                }
+              },
+            );
           },
           backgroundColor: const Color(0xff03045E),
           child: const Icon(Icons.qr_code_scanner),
@@ -103,14 +116,20 @@ class _MenuScreenState extends State<MenuScreen> {
                 const Spacer(),
                 IconButton(
                   onPressed: () {
-                    setState(() {
-                      currentScreen = const ProfileScreen();
-                      currentTab = 3;
-                    });
+                    Absen().cekApakahAdaTransaksi().then(
+                      (value) {
+                        if (!value) {
+                          setState(() {
+                            currentScreen = const ProfileScreen();
+                            currentTab = 2;
+                          });
+                        }
+                      },
+                    );
                   },
                   icon: Icon(
                     Icons.account_circle_sharp,
-                    color: currentTab == 3 ? const Color(0xff03045E) : Colors.grey,
+                    color: currentTab == 2 ? const Color(0xff03045E) : Colors.grey,
                   ),
                 ),
                 SizedBox(width: size.width / 8),

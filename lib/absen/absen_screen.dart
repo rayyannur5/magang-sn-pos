@@ -1,14 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_pos/absen/camera_screen.dart';
 import 'package:http/http.dart' as http;
+import 'package:sn_pos/absen/laporan_tutup_shift_screen.dart';
 import 'package:sn_pos/styles/navigator.dart';
 
 import '../constants.dart';
+import '../no_internet_screen.dart';
 import 'absen.dart';
+import 'laporan_detail_absen.dart';
 
-class AbsenScreen extends StatelessWidget {
+class AbsenScreen extends StatefulWidget {
   const AbsenScreen({super.key});
+
+  @override
+  State<AbsenScreen> createState() => _AbsenScreenState();
+}
+
+class _AbsenScreenState extends State<AbsenScreen> {
+  final numberFormat = NumberFormat("#,##0", "en_US");
+
+  DateTime begin_date = DateTime.now();
+  DateTime end_date = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
@@ -20,18 +35,23 @@ class AbsenScreen extends StatelessWidget {
           height: (size.height) / 6,
           alignment: Alignment.bottomLeft,
           padding: EdgeInsets.fromLTRB(size.width / 15, 0, size.width / 15, 10),
-          child: const Text('Absensi', style: TextStyle(fontFamily: 'Poppins', fontSize: 36, fontWeight: FontWeight.w800)),
+          child: const Text('Absensi', style: TextStyle(fontFamily: 'Poppins', fontSize: 30, fontWeight: FontWeight.w800)),
         ),
         FutureBuilder<dynamic>(
             future: Absen().cekAbsenHariIni(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
               print(snapshot.data);
+              if (snapshot.data == '404') {
+                SchedulerBinding.instance.addPostFrameCallback((_) {
+                  Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => NoInternetScreen()));
+                });
+              }
               return Container(
-                height: size.height / 5,
+                height: size.height / 7,
                 width: size.width,
                 margin: EdgeInsets.symmetric(horizontal: size.width / 15),
-                padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: size.width / 20),
+                padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: size.width / 25),
                 decoration: BoxDecoration(
                   color: const Color(0xffCAF0F8),
                   borderRadius: BorderRadius.circular(15),
@@ -41,8 +61,12 @@ class AbsenScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      snapshot.data,
-                      style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600),
+                      snapshot.data == 'BELUM_ABSEN_MASUK'
+                          ? 'Belum Absen Masuk'
+                          : snapshot.data == 'SUDAH_ABSEN_MASUK'
+                              ? 'Sudah Absen Masuk'
+                              : 'Anda Sudah Absen Keluar',
+                      style: TextStyle(fontFamily: 'Poppins', fontSize: size.width / 24, fontWeight: FontWeight.w600),
                     ),
                     const Spacer(),
                     snapshot.data != 'SUDAH_ABSEN_KELUAR'
@@ -59,7 +83,14 @@ class AbsenScreen extends StatelessWidget {
                                       : 'error',
                               style: TextStyle(fontFamily: 'Poppins'),
                             ))
-                        : const SizedBox(),
+                        : ElevatedButton(
+                            onPressed: () {
+                              Nav.push(context, LaporanTutupShiftScreen());
+                            },
+                            style: ButtonStyle(
+                                shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(7.5))),
+                                backgroundColor: MaterialStateProperty.all(const Color(0xff0077B6))),
+                            child: const Text('Cetak Laporan')),
                   ],
                 ),
               );
@@ -74,10 +105,16 @@ class AbsenScreen extends StatelessWidget {
               const Text('Daftar Absensi', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w800)),
               const SizedBox(height: 10),
               GestureDetector(
-                onTap: () => showDialog(
-                  context: context,
-                  builder: (context) => DateRangePickerDialog(firstDate: DateTime.parse('20200101'), lastDate: DateTime.parse('20300101')),
-                ),
+                onTap: () async {
+                  try {
+                    DateTimeRange? date = await showDateRangePicker(context: context, firstDate: DateTime.parse('20200101'), lastDate: DateTime.parse('20300101'));
+                    begin_date = date!.start;
+                    end_date = date.end;
+                    setState(() {});
+                  } catch (e) {
+                    print(e);
+                  }
+                },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -88,7 +125,7 @@ class AbsenScreen extends StatelessWidget {
                         color: Colors.grey,
                         borderRadius: BorderRadius.circular(15),
                       ),
-                      child: const Center(child: Text('06/06/2023', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700))),
+                      child: Center(child: Text(begin_date.toString().substring(0, 10), style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700))),
                     ),
                     Container(
                       height: 40,
@@ -97,7 +134,7 @@ class AbsenScreen extends StatelessWidget {
                         color: Colors.grey,
                         borderRadius: BorderRadius.circular(15),
                       ),
-                      child: const Center(child: Text('06/06/2023', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700))),
+                      child: Center(child: Text(end_date.toString().substring(0, 10), style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700))),
                     ),
                   ],
                 ),
@@ -106,91 +143,119 @@ class AbsenScreen extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: size.height - (size.height / 8) - ((size.height) / 5),
-          child: ListView(
-            children: [
-              cardLaporanAbsensi(size),
-              cardLaporanAbsensi(size),
-              cardLaporanAbsensi(size),
-              cardLaporanAbsensi(size),
-              cardLaporanAbsensi(size),
-              const SizedBox(height: 300),
-            ],
-          ),
+          height: size.height - (size.height / 6) - (size.height / 7) - (size.height / 8) - 60,
+          child: FutureBuilder<dynamic>(
+              future: Absen().absensiReport(begin_date, end_date),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+
+                List hasilAbsensi = snapshot.data;
+                return RefreshIndicator(
+                    onRefresh: () async {
+                      setState(() {});
+                    },
+                    child: hasilAbsensi.isNotEmpty
+                        ? ListView.builder(
+                            itemCount: hasilAbsensi.length,
+                            itemBuilder: (context, index) => cardLaporanAbsensi(size, hasilAbsensi[index]),
+                          )
+                        : ListView(
+                            children: [Image.asset('assets/image/no-data.png')],
+                          ));
+              }),
         )
       ],
     ));
   }
 
-  Container cardLaporanAbsensi(Size size) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: size.width / 15),
-      margin: const EdgeInsets.only(bottom: 15),
+  Widget cardLaporanAbsensi(Size size, absensi) {
+    return GestureDetector(
+      onTap: () {
+        DateTime date = DateTime.parse(absensi['created_at']);
+        Nav.push(context, LaporanDetailAbsen(date: date));
+      },
       child: Container(
-        width: size.width,
-        height: size.height / 12,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))]),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              width: size.width / 2.3,
-              padding: EdgeInsets.only(left: size.width / 15),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Tanggulangin', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600)),
-                  Text('Masuk : 14/02/2023 06.53\nKeluar : 14/02/2023 16.53', style: TextStyle(fontFamily: 'Poppins', fontSize: 10)),
-                ],
+        padding: EdgeInsets.symmetric(horizontal: size.width / 15),
+        margin: const EdgeInsets.only(bottom: 15),
+        child: Container(
+          width: size.width,
+          height: 100,
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))]),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: size.width / 2.3,
+                padding: EdgeInsets.only(left: 15),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(absensi['name_store'], style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600)),
+                    Text('Masuk : ${absensi['created_at']}\nKeluar : ${absensi['created_at'] == absensi['updated_at'] ? 'BELUM ABSEN' : absensi['updated_at']}',
+                        style: TextStyle(fontFamily: 'Poppins', fontSize: 10)),
+                  ],
+                ),
               ),
-            ),
-            Container(
-              width: size.width - (size.width / 2.3) - 2 * (size.width / 15),
-              padding: EdgeInsets.all(size.width / 35),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        height: size.height / 40,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.amber,
-                          borderRadius: BorderRadius.circular(7.5),
+              Container(
+                width: size.width - (size.width / 2.3) - 2 * (size.width / 15),
+                padding: EdgeInsets.all(size.width / 35),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          height: 25,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.amber,
+                            borderRadius: BorderRadius.circular(7.5),
+                          ),
+                          child: Center(child: Text('Shift ${absensi['shift']}', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700))),
                         ),
-                        child: const Center(child: Text('Shift 1', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700))),
+                        absensi['description'] == 'Terlambat'
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                height: 25,
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(7.5),
+                                ),
+                                child: const Center(child: Text('Terlambat', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700))),
+                              )
+                            : Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                height: 25,
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  borderRadius: BorderRadius.circular(7.5),
+                                ),
+                                child: const Center(child: Text('Tepat waktu', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700))),
+                              )
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      height: 25,
+                      decoration: BoxDecoration(
+                        color: const Color(0xff0077B6),
+                        borderRadius: BorderRadius.circular(7.5),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        height: size.height / 40,
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          borderRadius: BorderRadius.circular(7.5),
+                      child: Center(
+                        child: Text(
+                          '${numberFormat.format(absensi['total'])}',
+                          style: TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
                         ),
-                        child: const Center(child: Text('Tepat waktu', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700))),
-                      )
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    height: size.height / 40,
-                    decoration: BoxDecoration(
-                      color: const Color(0xff0077B6),
-                      borderRadius: BorderRadius.circular(7.5),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'Rp 6.000,00',
-                        style: TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            )
-          ],
+                  ],
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

@@ -42,6 +42,8 @@ dependencies:
   path_provider: ^2.0.13
   http: ^0.13.5
   ftpconnect: ^2.0.2
+  intl: ^0.17.0
+  blue_thermal_printer: ^1.2.3
 
 dev_dependencies:
   flutter_test:
@@ -101,3 +103,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/image/icon.jpeg"
+  min_sdk_android: 21 # android min sdk min:16, default 21

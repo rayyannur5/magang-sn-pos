@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_pos/home/itemProvider.dart';
 import 'package:sn_pos/home/items.dart';
 import 'package:sn_pos/home/success_transaction_screen.dart';
@@ -19,6 +21,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   TextEditingController cash = TextEditingController();
   TextEditingController plat = TextEditingController();
   int inputPrice = 0;
+  final numberFormat = NumberFormat("#,##0", "en_US");
+  late String id;
+
+  Future bayar(List item, DateTime date) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    var id_user = pref.getString('id_user') ?? '0';
+    int id_user1000 = 1000 + int.parse(id_user);
+
+    var year = date.year.toString();
+    var month = date.month < 10 ? '0${date.month.toString()}' : date.month.toString();
+    var day = date.day < 10 ? '0${date.day.toString()}' : date.day.toString();
+    var hour = date.hour < 10 ? '0${date.hour.toString()}' : date.hour.toString();
+    var minute = date.minute < 10 ? '0${date.minute.toString()}' : date.minute.toString();
+    var second = date.second < 10 ? '0${date.second.toString()}' : date.second.toString();
+
+    var id_trx = id_user1000.toString() + year + month + day + hour + minute + second;
+
+    String dataTerpilih = "";
+    for (int i = 0; i < item.length; i++) {
+      for (int j = 0; j < item[i]['count']; j++) {
+        dataTerpilih += '${item[i]['id_produk']}C';
+      }
+    }
+    print(dataTerpilih);
+
+    await pref.setString('TRX-$id_trx', dataTerpilih);
+    id = 'TRX-$id_trx';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,204 +75,188 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ],
               ),
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: size.width / 15),
-              child: const Text('Item', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600)),
-            ),
-            for (var i in itemManagement.getItemsSelected())
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: size.width / 15),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      // ignore: prefer_interpolation_to_compose_strings
-                      "\u2022  " + i['name'] + ' \u2715 ' + i['count'].toString(),
-                      style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
-                    ),
-                    Text(
-                      // ignore: prefer_interpolation_to_compose_strings
-                      'Rp ' + i['price'].toString(),
-                      style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w900),
-                    )
-                  ],
-                ),
-              ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            SizedBox(
+              height: size.height / 1.4,
+              child: ListView(
                 children: [
-                  const Text('Total', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600)),
-                  Text('Rp ${itemManagement.getPrice()}', style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600))
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: size.width / 15),
+                    child: const Text('Item', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600)),
+                  ),
+                  for (var i in itemManagement.getItemsSelected())
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: size.width / 15),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            // ignore: prefer_interpolation_to_compose_strings
+                            "\u2022  " + i['name'] + ' \u2715 ' + i['count'].toString(),
+                            style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
+                          ),
+                          Text(
+                            '${numberFormat.format(i['price'])}',
+                            style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w900),
+                          )
+                        ],
+                      ),
+                    ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Total', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600)),
+                        Text('${numberFormat.format(itemManagement.getPrice())}', style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600))
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: size.width / 15),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Kembalian', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600)),
+                        Text('${numberFormat.format((int.tryParse(cash.text) is int ? int.parse(cash.text) : 0) - itemManagement.getPrice())}',
+                            style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600))
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: 10),
+                    child: TextField(
+                      maxLines: 1,
+                      controller: cash,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      onChanged: (value) => setState(() {}),
+                      decoration: const InputDecoration(
+                          label: Text(
+                        'Cash/Tunai',
+                        style: TextStyle(fontFamily: 'Poppins', color: Colors.black, fontSize: 20, fontWeight: FontWeight.w600),
+                      )),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: size.width / 15),
+                    child: TextField(
+                      maxLines: 1,
+                      controller: plat,
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9]+$'))],
+                      decoration: const InputDecoration(
+                          label: Text(
+                        'Plat Kendaraan',
+                        style: TextStyle(fontFamily: 'Poppins', color: Colors.black, fontSize: 20, fontWeight: FontWeight.w600),
+                      )),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Material(
+                        elevation: 2,
+                        child: InkWell(
+                          onTap: () {
+                            // int hargaSekarang = (int.tryParse(cash.text) is int ? int.parse(cash.text) : 0);
+                            int hargaSekarang = 5000;
+                            cash.text = hargaSekarang.toString();
+                            setState(() {});
+                          },
+                          child: SizedBox(
+                            height: 50,
+                            width: size.width / 2.5,
+                            // color: Colors.amber,
+                            child: const Center(
+                                child: Text(
+                              '5.000',
+                              style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w900),
+                            )),
+                          ),
+                        ),
+                      ),
+                      Material(
+                        elevation: 2,
+                        child: InkWell(
+                          onTap: () {
+                            int hargaSekarang = 10000;
+                            cash.text = hargaSekarang.toString();
+                            setState(() {});
+                          },
+                          child: SizedBox(
+                            height: 50,
+                            width: size.width / 2.5,
+                            // color: Colors.amber,
+                            child: const Center(
+                                child: Text(
+                              '10.000',
+                              style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w900),
+                            )),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Material(
+                        elevation: 2,
+                        child: InkWell(
+                          onTap: () {
+                            int hargaSekarang = 50000;
+                            cash.text = hargaSekarang.toString();
+                            setState(() {});
+                          },
+                          child: SizedBox(
+                            height: 50,
+                            width: size.width / 2.5,
+                            // color: Colors.amber,
+                            child: const Center(
+                                child: Text(
+                              '50.000',
+                              style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w900),
+                            )),
+                          ),
+                        ),
+                      ),
+                      Material(
+                        elevation: 2,
+                        child: InkWell(
+                          onTap: () {
+                            int hargaSekarang = 100000;
+                            cash.text = hargaSekarang.toString();
+                            setState(() {});
+                          },
+                          child: SizedBox(
+                            height: 50,
+                            width: size.width / 2.5,
+                            // color: Colors.amber,
+                            child: const Center(
+                                child: Text(
+                              '100.000',
+                              style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w900),
+                            )),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: size.width / 15),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Kembalian', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600)),
-                  Text('Rp ${(int.tryParse(cash.text) is int ? int.parse(cash.text) : 0) - itemManagement.getPrice()}',
-                      style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600))
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: 10),
-              child: TextField(
-                maxLines: 1,
-                controller: cash,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                onChanged: (value) => setState(() {}),
-                decoration: const InputDecoration(
-                    label: Text(
-                  'Cash/Tunai',
-                  style: TextStyle(fontFamily: 'Poppins', color: Colors.black, fontSize: 20, fontWeight: FontWeight.w600),
-                )),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: size.width / 15),
-              child: TextField(
-                maxLines: 1,
-                controller: plat,
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9]+$'))],
-                decoration: const InputDecoration(
-                    label: Text(
-                  'Plat Kendaraan',
-                  style: TextStyle(fontFamily: 'Poppins', color: Colors.black, fontSize: 20, fontWeight: FontWeight.w600),
-                )),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Material(
-                  elevation: 2,
-                  child: InkWell(
-                    onTap: () {
-                      // int hargaSekarang = (int.tryParse(cash.text) is int ? int.parse(cash.text) : 0);
-                      int hargaSekarang = 5000;
-                      cash.text = hargaSekarang.toString();
-                      setState(() {});
-                    },
-                    child: SizedBox(
-                      height: 50,
-                      width: size.width / 2.5,
-                      // color: Colors.amber,
-                      child: const Center(
-                          child: Text(
-                        '5.000',
-                        style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w900),
-                      )),
-                    ),
-                  ),
-                ),
-                Material(
-                  elevation: 2,
-                  child: InkWell(
-                    onTap: () {
-                      int hargaSekarang = 10000;
-                      cash.text = hargaSekarang.toString();
-                      setState(() {});
-                    },
-                    child: SizedBox(
-                      height: 50,
-                      width: size.width / 2.5,
-                      // color: Colors.amber,
-                      child: const Center(
-                          child: Text(
-                        '10.000',
-                        style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w900),
-                      )),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Material(
-                  elevation: 2,
-                  child: InkWell(
-                    onTap: () {
-                      int hargaSekarang = 50000;
-                      cash.text = hargaSekarang.toString();
-                      setState(() {});
-                    },
-                    child: SizedBox(
-                      height: 50,
-                      width: size.width / 2.5,
-                      // color: Colors.amber,
-                      child: const Center(
-                          child: Text(
-                        '50.000',
-                        style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w900),
-                      )),
-                    ),
-                  ),
-                ),
-                Material(
-                  elevation: 2,
-                  child: InkWell(
-                    onTap: () {
-                      int hargaSekarang = 100000;
-                      cash.text = hargaSekarang.toString();
-                      setState(() {});
-                    },
-                    child: SizedBox(
-                      height: 50,
-                      width: size.width / 2.5,
-                      // color: Colors.amber,
-                      child: const Center(
-                          child: Text(
-                        '100.000',
-                        style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w900),
-                      )),
-                    ),
-                  ),
-                ),
-              ],
             ),
             const Spacer(),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: size.height / 20),
+              padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: size.height / 25),
               child: GeneralButton(
                   onTap: () {
-                    if ((int.tryParse(cash.text) is int ? int.parse(cash.text) : 0) - itemManagement.getPrice() < 0) {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return Dialog(
-                              child: Container(
-                            margin: const EdgeInsets.all(20),
-                            child: const Text('Uang cash masih kurang', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w800)),
-                          ));
-                        },
-                      );
-                      return;
-                    }
-                    if (plat.text == "") {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return Dialog(
-                              child: Container(
-                            margin: const EdgeInsets.all(20),
-                            child: const Text('Kolom Nomor Plat masih kosong', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w800)),
-                          ));
-                        },
-                      );
-                      return;
-                    }
-                    Item().bayar(itemManagement.getItemsSelected());
-                    Nav.push(context, SuccessTransactionScreen(cash: cash.text));
+                    var date = DateTime.now();
+                    bayar(itemManagement.getItemsSelected(), date).then((value) => Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
+                          return SuccessTransactionScreen(cash: int.tryParse(cash.text) is int ? int.parse(cash.text) : 0, date: date, id: id);
+                        }), (r) {
+                          return false;
+                        }));
                   },
                   text: 'Bayar'),
             )

@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_pos/home/itemProvider.dart';
@@ -12,31 +15,8 @@ import 'package:sn_pos/styles/navigator.dart';
 import '../constants.dart';
 
 class HomeScreen extends StatefulWidget {
-  Future kirimTRXkeDB() async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    print(pref.getKeys());
-    for (var i in pref.getKeys()) {
-      if (i.contains('TRX')) {
-        var id_user = pref.getString('id_user') ?? 0;
-        var store_id_active = pref.getString('store_id_active');
-        var shift = pref.getString('shift');
-        String qty = (pref.getString(i)!.split('C').length - 1).toString();
-        String data = pref.getString(i) ?? '';
-        data = data.substring(0, data.length - 1);
-        String trx = i.split('-').last;
-        var resp = await http.get(Uri.parse('${Constants.urlKirimTransaksi}?id=$id_user&shift=$shift&store=$store_id_active&qty=$qty&trx=$trx&data=$data'));
-
-        print(resp.body);
-        if (resp.body.contains('aytechsuksestransaksi-')) {
-          pref.remove(i);
-          print('masuk sini');
-        }
-      }
-    }
-  }
-
   HomeScreen({super.key}) {
-    kirimTRXkeDB();
+    // kirimTRXkeDB();
   }
 
   @override
@@ -47,6 +27,59 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isAbsen = true;
   List dataProduk = [];
   int banyakProduk = 0;
+  final numberFormat = NumberFormat("#,##0", "en_US");
+
+  Future kirimTRXkeDB() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    print('masuk kirim trx');
+    print(pref.getKeys());
+    for (var i in pref.getKeys()) {
+      if (i.contains('TRX')) {
+        var id_user = pref.getString('id_user') ?? 0;
+        var store_id_active = pref.getString('store_id_active');
+        var shift = pref.getString('shift');
+        String qty = (pref.getString(i)!.split('C').length - 1).toString();
+        String data = pref.getString(i) ?? '';
+        data = data.substring(0, data.length - 1);
+        String trx = i.split('-').last;
+        try {
+          var resp = await http.get(Uri.parse('${Constants.urlKirimTransaksi}?id=$id_user&shift=$shift&store=$store_id_active&qty=$qty&trx=$trx&data=$data'));
+          print(resp.body);
+          if (resp.body.contains('aytechsuksestransaksi-')) {
+            pref.remove(i);
+            setState(() {});
+          }
+        } catch (e) {
+          print(e);
+          // ignore: use_build_context_synchronously
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              duration: Duration(seconds: 5),
+              content: Text("Transaksi belum terkirim, tidak ada koneksi internet"),
+            ));
+          }
+        }
+      }
+    }
+  }
+
+  _HomeScreenState() {
+    kirimTRXkeDB();
+  }
+
+  Timer? timer;
+
+  @override
+  void initState() {
+    super.initState();
+    timer = Timer.periodic(Duration(seconds: 30), (Timer t) => kirimTRXkeDB());
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Katalog', style: TextStyle(fontFamily: 'Poppins', fontSize: 36, fontWeight: FontWeight.w800)),
+                        const Text('Katalog', style: TextStyle(fontFamily: 'Poppins', fontSize: 30, fontWeight: FontWeight.w800)),
                         isAbsen
                             ? Row(
                                 children: [
@@ -129,14 +162,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                       child: AnimatedContainer(
                                         duration: const Duration(milliseconds: 200),
                                         height: 50,
-                                        width: itemManagement.getPrice() == 0 ? 50 : 100,
+                                        width: itemManagement.getPrice() == 0 ? 50 : 95,
                                         padding: const EdgeInsets.all(10),
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           children: [
                                             itemManagement.getPrice() != 0
                                                 ? Text(
-                                                    itemManagement.getPrice().toString(),
+                                                    '${numberFormat.format(itemManagement.getPrice())}',
                                                     style: const TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
                                                   )
                                                 : const SizedBox(),
@@ -158,6 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: RefreshIndicator(
                       onRefresh: () async {
                         itemManagement.reset();
+                        itemManagement.setItems([], 0);
                         Nav.pushReplacement(context, const MenuScreen(initialPage: 0));
                       },
                       child: ListView(
@@ -224,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       const SizedBox(height: 10),
                       Text(title, style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w700)),
-                      Text('Rp $price,00', style: const TextStyle(fontFamily: 'Poppins', fontSize: 14)),
+                      Text('${numberFormat.format(int.parse(price))}', style: const TextStyle(fontFamily: 'Poppins', fontSize: 14)),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [

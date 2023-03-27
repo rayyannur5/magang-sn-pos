@@ -31,7 +31,10 @@ class Auth {
           pref.setString('phone_store', dataUser[16]);
           pref.setString('store_id_active', dataUser[17]);
           pref.setString('brand_store', dataUser[18]);
+        } else {
+          pref.setString('store_id_active', '0');
         }
+        print(dataUser);
         return response.body;
       } else if (response.body == '2' || response.body == '3') {
         return response.body;
@@ -39,6 +42,7 @@ class Auth {
         return 'error';
       }
     } catch (e) {
+      print(e);
       print('tidak ada koneksi internet');
       return '404';
     }
