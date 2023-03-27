@@ -36,7 +36,6 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
   @override
   void initState() {
     super.initState();
-    getDevice();
   }
 
   void getDevice() async {
@@ -163,8 +162,9 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
     };
 
     dataGlobalResponse = dataResponse;
+
     if (mounted) {
-      setState(() {});
+      getDevice();
     }
     return dataResponse;
   }
