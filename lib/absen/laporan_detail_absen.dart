@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
@@ -10,6 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_pos/absen/absen.dart';
 import 'package:http/http.dart' as http;
 import 'package:sn_pos/constants.dart';
+import 'package:blue_print_pos/blue_print_pos.dart';
+import 'package:blue_print_pos/models/models.dart';
+import 'package:blue_print_pos/receipt/receipt.dart';
 
 import '../styles/general_button.dart';
 import '../styles/navigator.dart';
@@ -24,64 +27,81 @@ class LaporanDetailAbsen extends StatefulWidget {
 
 class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
   final numberFormat = NumberFormat("#,##0", "en_US");
-  List<BluetoothDevice> devices = [];
-  BluetoothDevice? selectedDevice;
-  BlueThermalPrinter printer = BlueThermalPrinter.instance;
-  bool isConnect = false;
+  final BluePrintPos _bluePrintPos = BluePrintPos.instance;
+  List<BlueDevice> _blueDevices = <BlueDevice>[];
+  BlueDevice? _selectedDevice;
   DateTime date;
   var dataGlobalResponse;
 
   _LaporanDetailAbsenState(this.date);
 
-  @override
-  void initState() {
-    super.initState();
+  Future getDevice() async {
+    return await _bluePrintPos.scan();
   }
 
-  void getDevice() async {
-    bool cek = await printer.isConnected ?? false;
-    if (cek) {
-      var pref = await SharedPreferences.getInstance();
-      String BL_NAME = pref.getString('BL_NAME') ?? '';
-      String BL_ADDRESS = pref.getString('BL_ADDRESS') ?? '';
-      if (BL_ADDRESS.isNotEmpty) {
-        selectedDevice = BluetoothDevice(BL_NAME, BL_ADDRESS);
-      }
-      setState(() {
-        isConnect = true;
-      });
-    } else {
-      var pref = await SharedPreferences.getInstance();
-      String BL_NAME = pref.getString('BL_NAME') ?? '';
-      String BL_ADDRESS = pref.getString('BL_ADDRESS') ?? '';
-      if (BL_ADDRESS.isNotEmpty) {
-        selectedDevice = BluetoothDevice(BL_NAME, BL_ADDRESS);
-        try {
-          await printer.connect(selectedDevice!).then((value) {
-            if (value) {
-              setState(() {
-                isConnect = true;
-              });
-            }
-          });
-        } catch (e) {}
-      }
-    }
-    devices = await printer.getBondedDevices();
-    setState(() {});
-  }
-
-  void setDevice(BluetoothDevice device) async {
-    if ((await printer.isConnected)!) {
-      await printer.disconnect();
-      isConnect = false;
-    }
-    var pref = await SharedPreferences.getInstance();
-    pref.setString('BL_NAME', device.name!);
-    pref.setString('BL_ADDRESS', device.address!);
-    setState(() {
-      selectedDevice = device;
-    });
+  void pilihPrinter() {
+    _bluePrintPos.disconnect();
+    showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) => StatefulBuilder(
+              builder: (context, refresh) => Dialog(
+                child: Container(
+                  height: 400,
+                  child: FutureBuilder<dynamic>(
+                      future: getDevice(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+                        _blueDevices = snapshot.data;
+                        return Column(
+                          children: [
+                            SizedBox(
+                              height: 350,
+                              child: ListView(
+                                  children: List<Widget>.generate(
+                                _blueDevices.length,
+                                (index) => ListTile(
+                                  onTap: () {
+                                    _selectedDevice = _blueDevices[index];
+                                    _bluePrintPos.connect(_selectedDevice!).then((value) {
+                                      if (value == ConnectionStatus.connected) {
+                                        Nav.pop(context);
+                                        setState(() {});
+                                      }
+                                      ;
+                                    });
+                                  },
+                                  title: Text(_blueDevices[index].name),
+                                  subtitle: Text(_blueDevices[index].address),
+                                ),
+                              )),
+                            ),
+                            SizedBox(
+                              height: 50,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.search),
+                                    onPressed: () {
+                                      refresh(() {});
+                                    },
+                                  ),
+                                  TextButton(
+                                      onPressed: () {
+                                        Nav.pop(context);
+                                        setState(() {});
+                                      },
+                                      child: Text('Batal')),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                ),
+              ),
+            ));
   }
 
   Future dataShift() async {
@@ -163,9 +183,9 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
 
     dataGlobalResponse = dataResponse;
 
-    if (mounted) {
-      getDevice();
-    }
+    // if (mounted) {
+    //   getDevice();
+    // }
     return dataResponse;
   }
 
@@ -279,65 +299,17 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      DropdownButton<BluetoothDevice>(
-                        hint: Text('Pilih Printer'),
-                        value: selectedDevice,
-                        items: devices
-                            .map((e) => DropdownMenuItem(
-                                  child: Text(e.name!),
-                                  value: e,
-                                ))
-                            .toList(),
-                        onChanged: (value) {
-                          setDevice(value!);
-                        },
-                      ),
-                      !isConnect
-                          ? ElevatedButton(
-                              onPressed: selectedDevice == null
-                                  ? null
-                                  : () {
-                                      try {
-                                        printer.connect(selectedDevice!).then((value) {
-                                          if (value) {
-                                            setState(() {
-                                              isConnect = true;
-                                            });
-                                          } else {
-                                            showDialog(
-                                                context: context,
-                                                builder: (c) => const AlertDialog(
-                                                      content: Text(
-                                                        'Gagal terhubung',
-                                                        textAlign: TextAlign.center,
-                                                      ),
-                                                    ));
-                                          }
-                                        });
-                                      } catch (e) {
-                                        showDialog(
-                                            context: context,
-                                            builder: (c) => const AlertDialog(
-                                                  content: Text(
-                                                    'Gagal terhubung',
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ));
-                                      }
-                                    },
-                              style: ButtonStyle(shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(7.5)))),
-                              child: Text('Hubungkan'))
-                          : ElevatedButton(
-                              onPressed: () {
-                                printer.disconnect().then((value) {
-                                  setState(() {
-                                    isConnect = false;
-                                  });
-                                });
-                              },
-                              style: ButtonStyle(
-                                  backgroundColor: MaterialStatePropertyAll(Colors.red.shade700), shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(7.5)))),
-                              child: Text('Putuskan')),
+                      ElevatedButton(onPressed: pilihPrinter, child: Text('Pilih Printer')),
+                      Text(_selectedDevice == null ? 'Pilih Printer' : _selectedDevice!.name),
+                      ElevatedButton(
+                          onPressed: !_bluePrintPos.isConnected
+                              ? null
+                              : () {
+                                  _bluePrintPos.disconnect();
+                                  setState(() {});
+                                },
+                          style: ButtonStyle(backgroundColor: _bluePrintPos.isConnected ? MaterialStatePropertyAll(Colors.red) : MaterialStatePropertyAll(Colors.grey.shade200)),
+                          child: Text('Putuskan')),
                     ],
                   ),
                 ),
@@ -348,113 +320,157 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
                     width: size.width,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: !isConnect
+                      onPressed: !_bluePrintPos.isConnected
                           ? null
                           : dataGlobalResponse == null
                               ? null
                               : () async {
-                                  if ((await printer.isConnected)!) {
-                                    // var pref = await SharedPreferences.getInstance();
-                                    // var tanggal = DateFormat('d MMMM y | H:m').format(date);
-                                    // final numberFormat = NumberFormat("#,##0", "en_US");
-                                    final ByteData logoBytes = await rootBundle.load('assets/image/logo-print.png');
-                                    final ByteData textBytes = await rootBundle.load('assets/image/text-print.png');
+                                  // if ((await printer.isConnected)!) {
+                                  //   // var pref = await SharedPreferences.getInstance();
+                                  //   // var tanggal = DateFormat('d MMMM y | H:m').format(date);
+                                  //   // final numberFormat = NumberFormat("#,##0", "en_US");
+                                  //   final ByteData logoBytes = await rootBundle.load('assets/image/logo-print.png');
+                                  //   final ByteData textBytes = await rootBundle.load('assets/image/text-print.png');
 
-                                    final Uint8List logo = logoBytes.buffer.asUint8List(logoBytes.offsetInBytes, logoBytes.lengthInBytes);
-                                    final Uint8List text = textBytes.buffer.asUint8List(textBytes.offsetInBytes, textBytes.lengthInBytes);
+                                  //   final Uint8List logo = logoBytes.buffer.asUint8List(logoBytes.offsetInBytes, logoBytes.lengthInBytes);
+                                  //   final Uint8List text = textBytes.buffer.asUint8List(textBytes.offsetInBytes, textBytes.lengthInBytes);
 
-                                    printer.printImageBytes(logo);
-                                    printer.printImageBytes(text);
-                                    printer.printCustom('Laporan Tutup SHift', 1, 1);
-                                    printer.printNewLine();
-                                    printer.printCustom('Kasir     : ${dataGlobalResponse['name']}', 1, 0);
-                                    printer.printCustom('Outlet    : ${dataGlobalResponse['dataAbsen']['name_store']}', 1, 0);
-                                    printer.printCustom('--------------------------------', 1, 1);
-                                    printer.printCustom('Check in  : ${dataGlobalResponse['dataAbsen']['created_at']}', 1, 0);
-                                    printer.printCustom(
-                                        'Check out : ${dataGlobalResponse['dataAbsen']['updated_at'] == dataGlobalResponse['dataAbsen']['created_at'] ? 'BELUM ABSEN' : dataGlobalResponse['dataAbsen']['updated_at']}',
-                                        1,
-                                        0);
-                                    printer.printCustom('Status    : ${dataGlobalResponse['dataAbsen']['description']}', 1, 0);
-                                    printer.printCustom('--------------------------------', 1, 1);
-                                    printer.printCustom('RINCIAN', 1, 1);
-                                    printer.printCustom('--------------------------------', 1, 1);
-                                    for (int i = 0; i < dataGlobalResponse['dataProses'].length; i++) {
-                                      String namaProduk = '${dataGlobalResponse['dataJumlah'][i]}x ${dataGlobalResponse['dataProses'][i]['name']}';
+                                  //   printer.printImageBytes(logo);
+                                  //   printer.printImageBytes(text);
+                                  //   printer.printCustom('Laporan Tutup SHift', 1, 1);
+                                  //   printer.printNewLine();
+                                  //   printer.printCustom('Kasir     : ${dataGlobalResponse['name']}', 1, 0);
+                                  //   printer.printCustom('Outlet    : ${dataGlobalResponse['dataAbsen']['name_store']}', 1, 0);
+                                  //   printer.printCustom('--------------------------------', 1, 1);
+                                  //   printer.printCustom('Check in  : ${dataGlobalResponse['dataAbsen']['created_at']}', 1, 0);
+                                  //   printer.printCustom(
+                                  //       'Check out : ${dataGlobalResponse['dataAbsen']['updated_at'] == dataGlobalResponse['dataAbsen']['created_at'] ? 'BELUM ABSEN' : dataGlobalResponse['dataAbsen']['updated_at']}',
+                                  //       1,
+                                  //       0);
+                                  //   printer.printCustom('Status    : ${dataGlobalResponse['dataAbsen']['description']}', 1, 0);
+                                  //   printer.printCustom('--------------------------------', 1, 1);
+                                  //   printer.printCustom('RINCIAN', 1, 1);
+                                  //   printer.printCustom('--------------------------------', 1, 1);
+                                  //   for (int i = 0; i < dataGlobalResponse['dataProses'].length; i++) {
+                                  //     String namaProduk = '${dataGlobalResponse['dataJumlah'][i]}x ${dataGlobalResponse['dataProses'][i]['name']}';
 
-                                      if (namaProduk.length < 21) {
-                                        for (int i = namaProduk.length; i < 21; i++) {
-                                          namaProduk += ' ';
-                                        }
-                                      } else if (namaProduk.length > 21) {
-                                        namaProduk = namaProduk.substring(0, 21);
-                                      }
-                                      String harga = numberFormat.format(dataGlobalResponse['dataJumlah'][i] * int.parse(dataGlobalResponse['dataProses'][i]['harga'])).toString();
-                                      String space = '';
-                                      if (harga.length == 4) {
-                                        space = '      ';
-                                      } else if (harga.length == 5) {
-                                        space = '     ';
-                                      } else if (harga.length == 6) {
-                                        space = '    ';
-                                      } else if (harga.length == 7) {
-                                        space = '   ';
-                                      } else if (harga.length == 8) {
-                                        space = '  ';
-                                      }
-                                      printer.printCustom('$namaProduk$space$harga', 1, 0);
-                                    }
-                                    printer.printCustom('--------------------------------', 1, 1);
-                                    String omset = numberFormat.format(dataGlobalResponse['dataAbsen']['total']).toString();
-                                    String space = '';
-                                    if (omset.length == 4) {
-                                      space = '      ';
-                                    } else if (omset.length == 5) {
-                                      space = '     ';
-                                    } else if (omset.length == 6) {
-                                      space = '    ';
-                                    } else if (omset.length == 7) {
-                                      space = '   ';
-                                    } else if (omset.length == 8) {
-                                      space = '  ';
-                                    }
-                                    printer.printCustom('Perolehan Omset       $space$omset', 1, 0);
+                                  //     if (namaProduk.length < 21) {
+                                  //       for (int i = namaProduk.length; i < 21; i++) {
+                                  //         namaProduk += ' ';
+                                  //       }
+                                  //     } else if (namaProduk.length > 21) {
+                                  //       namaProduk = namaProduk.substring(0, 21);
+                                  //     }
+                                  //     String harga = numberFormat.format(dataGlobalResponse['dataJumlah'][i] * int.parse(dataGlobalResponse['dataProses'][i]['harga'])).toString();
+                                  //     String space = '';
+                                  //     if (harga.length == 4) {
+                                  //       space = '      ';
+                                  //     } else if (harga.length == 5) {
+                                  //       space = '     ';
+                                  //     } else if (harga.length == 6) {
+                                  //       space = '    ';
+                                  //     } else if (harga.length == 7) {
+                                  //       space = '   ';
+                                  //     } else if (harga.length == 8) {
+                                  //       space = '  ';
+                                  //     }
+                                  //     printer.printCustom('$namaProduk$space$harga', 1, 0);
+                                  //   }
+                                  //   printer.printCustom('--------------------------------', 1, 1);
+                                  //   String omset = numberFormat.format(dataGlobalResponse['dataAbsen']['total']).toString();
+                                  //   String space = '';
+                                  //   if (omset.length == 4) {
+                                  //     space = '      ';
+                                  //   } else if (omset.length == 5) {
+                                  //     space = '     ';
+                                  //   } else if (omset.length == 6) {
+                                  //     space = '    ';
+                                  //   } else if (omset.length == 7) {
+                                  //     space = '   ';
+                                  //   } else if (omset.length == 8) {
+                                  //     space = '  ';
+                                  //   }
+                                  //   printer.printCustom('Perolehan Omset       $space$omset', 1, 0);
 
-                                    String tabungan = numberFormat.format(dataGlobalResponse['tabungan']).toString();
-                                    if (tabungan.length == 4) {
-                                      space = '      ';
-                                    } else if (tabungan.length == 5) {
-                                      space = '     ';
-                                    } else if (tabungan.length == 6) {
-                                      space = '    ';
-                                    } else if (tabungan.length == 7) {
-                                      space = '   ';
-                                    } else if (tabungan.length == 8) {
-                                      space = '   ';
-                                    }
-                                    printer.printCustom('Tabungan Awal         $space$tabungan', 1, 0);
-                                    printer.printCustom('--------------------------------', 1, 1);
-                                    String totalTabungan = numberFormat.format(dataGlobalResponse['tabungan'] + dataGlobalResponse['dataAbsen']['total']).toString();
-                                    if (totalTabungan.length == 4) {
-                                      space = '      ';
-                                    } else if (totalTabungan.length == 5) {
-                                      space = '     ';
-                                    } else if (totalTabungan.length == 6) {
-                                      space = '    ';
-                                    } else if (totalTabungan.length == 7) {
-                                      space = '   ';
-                                    } else if (totalTabungan.length == 8) {
-                                      space = '  ';
-                                    }
-                                    printer.printCustom('Total Tabungan       $space$totalTabungan', 1, 0);
-                                    printer.printCustom('--------------------------------', 1, 1);
+                                  //   String tabungan = numberFormat.format(dataGlobalResponse['tabungan']).toString();
+                                  //   if (tabungan.length == 4) {
+                                  //     space = '      ';
+                                  //   } else if (tabungan.length == 5) {
+                                  //     space = '     ';
+                                  //   } else if (tabungan.length == 6) {
+                                  //     space = '    ';
+                                  //   } else if (tabungan.length == 7) {
+                                  //     space = '   ';
+                                  //   } else if (tabungan.length == 8) {
+                                  //     space = '   ';
+                                  //   }
+                                  //   printer.printCustom('Tabungan Awal         $space$tabungan', 1, 0);
+                                  //   printer.printCustom('--------------------------------', 1, 1);
+                                  //   String totalTabungan = numberFormat.format(dataGlobalResponse['tabungan'] + dataGlobalResponse['dataAbsen']['total']).toString();
+                                  //   if (totalTabungan.length == 4) {
+                                  //     space = '      ';
+                                  //   } else if (totalTabungan.length == 5) {
+                                  //     space = '     ';
+                                  //   } else if (totalTabungan.length == 6) {
+                                  //     space = '    ';
+                                  //   } else if (totalTabungan.length == 7) {
+                                  //     space = '   ';
+                                  //   } else if (totalTabungan.length == 8) {
+                                  //     space = '  ';
+                                  //   }
+                                  //   printer.printCustom('Total Tabungan       $space$totalTabungan', 1, 0);
+                                  //   printer.printCustom('--------------------------------', 1, 1);
 
-                                    printer.printNewLine();
-                                    printer.printCustom('Terima kasih sudah bekerja dengan baik', 1, 1);
-                                    printer.printCustom('Jangan lupa jaga kesehatan', 1, 1);
-                                    printer.printNewLine();
-                                    printer.printNewLine();
+                                  //   printer.printNewLine();
+                                  //   printer.printCustom('Terima kasih sudah bekerja dengan baik', 1, 1);
+                                  //   printer.printCustom('Jangan lupa jaga kesehatan', 1, 1);
+                                  //   printer.printNewLine();
+                                  //   printer.printNewLine();
+                                  // }
+                                  final ByteData logoBytes = await rootBundle.load('assets/image/logo-print.png');
+                                  final ByteData textBytes = await rootBundle.load('assets/image/text-print.png');
+
+                                  final ReceiptSectionText receiptText = ReceiptSectionText();
+                                  receiptText.addImage(
+                                    base64.encode(Uint8List.view(logoBytes.buffer)),
+                                    width: 100,
+                                  );
+                                  receiptText.addImage(
+                                    base64.encode(Uint8List.view(textBytes.buffer)),
+                                    width: 200,
+                                  );
+                                  receiptText.addText('Laporan Tutup SHift');
+                                  receiptText.addSpacer();
+                                  receiptText.addText('Kasir     : ${dataGlobalResponse['name']}', size: ReceiptTextSizeType.small, alignment: ReceiptAlignment.left);
+                                  receiptText.addText('Outlet    : ${dataGlobalResponse['dataAbsen']['name_store']}', size: ReceiptTextSizeType.small, alignment: ReceiptAlignment.left);
+                                  receiptText.addSpacer(useDashed: true);
+
+                                  receiptText.addText('Check in  : ${dataGlobalResponse['dataAbsen']['created_at']}', size: ReceiptTextSizeType.small, alignment: ReceiptAlignment.left);
+                                  receiptText.addText(
+                                      'Check out : ${dataGlobalResponse['dataAbsen']['updated_at'] == dataGlobalResponse['dataAbsen']['created_at'] ? 'BELUM ABSEN' : dataGlobalResponse['dataAbsen']['updated_at']}',
+                                      size: ReceiptTextSizeType.small,
+                                      alignment: ReceiptAlignment.left);
+                                  receiptText.addText('Status    : ${dataGlobalResponse['dataAbsen']['description']}', size: ReceiptTextSizeType.small, alignment: ReceiptAlignment.left);
+                                  receiptText.addSpacer(useDashed: true);
+                                  receiptText.addText('RINCIAN');
+                                  receiptText.addSpacer(useDashed: true);
+                                  for (int i = 0; i < dataGlobalResponse['dataProses'].length; i++) {
+                                    String namaProduk = '${dataGlobalResponse['dataJumlah'][i]}x ${dataGlobalResponse['dataProses'][i]['name']}';
+                                    String harga = numberFormat.format(dataGlobalResponse['dataJumlah'][i] * int.parse(dataGlobalResponse['dataProses'][i]['harga'])).toString();
+                                    receiptText.addLeftRightText(namaProduk, harga, leftSize: ReceiptTextSizeType.small, rightSize: ReceiptTextSizeType.small);
                                   }
+                                  receiptText.addSpacer(useDashed: true);
+                                  String omset = numberFormat.format(dataGlobalResponse['dataAbsen']['total']).toString();
+                                  receiptText.addLeftRightText('Omset', omset, leftSize: ReceiptTextSizeType.small, rightSize: ReceiptTextSizeType.small);
+                                  receiptText.addSpacer(useDashed: true);
+                                  receiptText.addSpacer();
+                                  receiptText.addText('Terimakasih sudah bekerja dengan baik', size: ReceiptTextSizeType.small);
+                                  receiptText.addText('Jangan lupa jaga kesehatan', size: ReceiptTextSizeType.small);
+                                  receiptText.addSpacer();
+                                  receiptText.addSpacer();
+                                  receiptText.addSpacer();
+
+                                  await _bluePrintPos.printReceiptText(receiptText);
                                 },
                       style: ButtonStyle(
                         backgroundColor: MaterialStateProperty.all(Colors.white),

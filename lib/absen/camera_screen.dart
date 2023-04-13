@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_pos/absen/send_absen_screen.dart';
 
 import '../menu.dart';
@@ -24,6 +27,13 @@ class _CameraScreenState extends State<CameraScreen> {
   void dispose() {
     controller.dispose();
     super.dispose();
+  }
+
+  File changeFileNameOnlySync(File file, String newFileName) {
+    var path = file.path;
+    var lastSeparator = path.lastIndexOf(Platform.pathSeparator);
+    var newPath = path.substring(0, lastSeparator + 1) + newFileName;
+    return file.renameSync(newPath);
   }
 
   @override
@@ -78,13 +88,33 @@ class _CameraScreenState extends State<CameraScreen> {
                                 // where it was saved.
                                 final image = await controller.takePicture();
 
+                                var pref = await SharedPreferences.getInstance();
+
                                 if (!mounted) return;
 
+                                var id_user = pref.getString('id_user') ?? '0';
+                                int id_user1000 = 1000 + int.parse(id_user);
+
+                                var date = DateTime.now();
+                                var year = date.year.toString();
+                                var month = date.month < 10 ? '0${date.month.toString()}' : date.month.toString();
+                                var day = date.day < 10 ? '0${date.day.toString()}' : date.day.toString();
+                                var hour = date.hour < 10 ? '0${date.hour.toString()}' : date.hour.toString();
+                                var minute = date.minute < 10 ? '0${date.minute.toString()}' : date.minute.toString();
+                                var second = date.second < 10 ? '0${date.second.toString()}' : date.second.toString();
+
+                                var namaGambar = '$id_user1000$year$month$day$hour$minute$second.jpg';
+
+                                File newImage = changeFileNameOnlySync(File(image.path), namaGambar);
+
+                                pref.setString("gambar_absen_path", newImage.path);
+                                pref.setString("gambar_absen", namaGambar);
                                 // If the picture was taken, display it on a new screen.
                                 await Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (context) => SendAbsenScreen(
-                                      imagePath: image.path,
+                                      imagePath: newImage.path,
+                                      imageName: namaGambar,
                                     ),
                                   ),
                                 );

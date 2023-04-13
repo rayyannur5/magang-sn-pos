@@ -10,8 +10,10 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_pos/constants.dart';
-// ignore: depend_on_referenced_packages
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+import 'package:blue_print_pos/blue_print_pos.dart';
+import 'package:blue_print_pos/models/models.dart';
+import 'package:blue_print_pos/receipt/receipt.dart';
+
 import '../menu.dart';
 import '../styles/general_button.dart';
 import '../styles/navigator.dart';
@@ -29,15 +31,77 @@ class DetailTransactionsScreen extends StatefulWidget {
 
 class _DetailTransactionsScreenState extends State<DetailTransactionsScreen> {
   final numberFormat = NumberFormat("#,##0", "en_US");
-  List<BluetoothDevice> devices = [];
-  BluetoothDevice? selectedDevice;
-  BlueThermalPrinter printer = BlueThermalPrinter.instance;
-  bool isConnect = false;
+  final BluePrintPos _bluePrintPos = BluePrintPos.instance;
+  List<BlueDevice> _blueDevices = <BlueDevice>[];
+  BlueDevice? _selectedDevice;
 
-  @override
-  void initState() {
-    super.initState();
-    getDevice();
+  Future getDevice() async {
+    return await _bluePrintPos.scan();
+  }
+
+  void pilihPrinter() {
+    _bluePrintPos.disconnect();
+    showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) => StatefulBuilder(
+              builder: (context, refresh) => Dialog(
+                child: Container(
+                  height: 400,
+                  child: FutureBuilder<dynamic>(
+                      future: getDevice(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+                        _blueDevices = snapshot.data;
+                        return Column(
+                          children: [
+                            SizedBox(
+                              height: 350,
+                              child: ListView(
+                                  children: List<Widget>.generate(
+                                _blueDevices.length,
+                                (index) => ListTile(
+                                  onTap: () {
+                                    _selectedDevice = _blueDevices[index];
+                                    _bluePrintPos.connect(_selectedDevice!).then((value) {
+                                      if (value == ConnectionStatus.connected) {
+                                        Nav.pop(context);
+                                        setState(() {});
+                                      }
+                                      ;
+                                    });
+                                  },
+                                  title: Text(_blueDevices[index].name),
+                                  subtitle: Text(_blueDevices[index].address),
+                                ),
+                              )),
+                            ),
+                            SizedBox(
+                              height: 50,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.search),
+                                    onPressed: () {
+                                      refresh(() {});
+                                    },
+                                  ),
+                                  TextButton(
+                                      onPressed: () {
+                                        Nav.pop(context);
+                                        setState(() {});
+                                      },
+                                      child: Text('Batal')),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                ),
+              ),
+            ));
   }
 
   Future getTransaksi() async {
@@ -47,52 +111,6 @@ class _DetailTransactionsScreenState extends State<DetailTransactionsScreen> {
     } catch (e) {
       print(e);
     }
-  }
-
-  void setDevice(BluetoothDevice device) async {
-    if ((await printer.isConnected)!) {
-      await printer.disconnect();
-      isConnect = false;
-    }
-    var pref = await SharedPreferences.getInstance();
-    pref.setString('BL_NAME', device.name!);
-    pref.setString('BL_ADDRESS', device.address!);
-    setState(() {
-      selectedDevice = device;
-    });
-  }
-
-  void getDevice() async {
-    bool cek = await printer.isConnected ?? false;
-    if (cek) {
-      var pref = await SharedPreferences.getInstance();
-      String BL_NAME = pref.getString('BL_NAME') ?? '';
-      String BL_ADDRESS = pref.getString('BL_ADDRESS') ?? '';
-      if (BL_ADDRESS.isNotEmpty) {
-        selectedDevice = BluetoothDevice(BL_NAME, BL_ADDRESS);
-      }
-      setState(() {
-        isConnect = true;
-      });
-    } else {
-      var pref = await SharedPreferences.getInstance();
-      String BL_NAME = pref.getString('BL_NAME') ?? '';
-      String BL_ADDRESS = pref.getString('BL_ADDRESS') ?? '';
-      if (BL_ADDRESS.isNotEmpty) {
-        selectedDevice = BluetoothDevice(BL_NAME, BL_ADDRESS);
-        try {
-          await printer.connect(selectedDevice!).then((value) {
-            if (value) {
-              setState(() {
-                isConnect = true;
-              });
-            }
-          });
-        } catch (e) {}
-      }
-    }
-    devices = await printer.getBondedDevices();
-    setState(() {});
   }
 
   @override
@@ -184,65 +202,17 @@ class _DetailTransactionsScreenState extends State<DetailTransactionsScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      DropdownButton<BluetoothDevice>(
-                        hint: Text('Pilih Printer'),
-                        value: selectedDevice,
-                        items: devices
-                            .map((e) => DropdownMenuItem(
-                                  child: Text(e.name!),
-                                  value: e,
-                                ))
-                            .toList(),
-                        onChanged: (value) {
-                          setDevice(value!);
-                        },
-                      ),
-                      !isConnect
-                          ? ElevatedButton(
-                              onPressed: selectedDevice == null
-                                  ? null
-                                  : () {
-                                      try {
-                                        printer.connect(selectedDevice!).then((value) {
-                                          if (value) {
-                                            setState(() {
-                                              isConnect = true;
-                                            });
-                                          } else {
-                                            showDialog(
-                                                context: context,
-                                                builder: (c) => const AlertDialog(
-                                                      content: Text(
-                                                        'Gagal terhubung',
-                                                        textAlign: TextAlign.center,
-                                                      ),
-                                                    ));
-                                          }
-                                        });
-                                      } catch (e) {
-                                        showDialog(
-                                            context: context,
-                                            builder: (c) => const AlertDialog(
-                                                  content: Text(
-                                                    'Gagal terhubung',
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ));
-                                      }
-                                    },
-                              style: ButtonStyle(shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(7.5)))),
-                              child: Text('Hubungkan'))
-                          : ElevatedButton(
-                              onPressed: () {
-                                printer.disconnect().then((value) {
-                                  setState(() {
-                                    isConnect = false;
-                                  });
-                                });
-                              },
-                              style: ButtonStyle(
-                                  backgroundColor: MaterialStatePropertyAll(Colors.red.shade700), shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(7.5)))),
-                              child: Text('Putuskan')),
+                      ElevatedButton(onPressed: pilihPrinter, child: Text('Pilih Printer')),
+                      Text(_selectedDevice == null ? 'Pilih Printer' : _selectedDevice!.name),
+                      ElevatedButton(
+                          onPressed: !_bluePrintPos.isConnected
+                              ? null
+                              : () {
+                                  _bluePrintPos.disconnect();
+                                  setState(() {});
+                                },
+                          style: ButtonStyle(backgroundColor: _bluePrintPos.isConnected ? MaterialStatePropertyAll(Colors.red) : MaterialStatePropertyAll(Colors.grey.shade200)),
+                          child: Text('Putuskan')),
                     ],
                   ),
                 ),
@@ -253,73 +223,60 @@ class _DetailTransactionsScreenState extends State<DetailTransactionsScreen> {
                     width: size.width,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: !isConnect
+                      onPressed: !_bluePrintPos.isConnected
                           ? null
                           : () async {
-                              if ((await printer.isConnected)!) {
-                                var pref = await SharedPreferences.getInstance();
-                                var tanggal = DateFormat('d MMMM y | H:m').format(DateTime.parse(widget.date));
-                                final numberFormat = NumberFormat("#,##0", "en_US");
+                              // if ((await printer.isConnected)!) {
 
-                                print(tanggal);
-                                String brand_store = pref.getString('brand_store') ?? '';
-                                String address_store = pref.getString('address_store') ?? '';
-                                String name_store = pref.getString('name_store') ?? '';
-                                String phone_store = pref.getString('phone_store') ?? '';
-                                String message_store = pref.getString('message_store') ?? '';
-                                String name = pref.getString('name') ?? '';
+                              var pref = await SharedPreferences.getInstance();
+                              var tanggal = DateFormat('d MMMM y | H:m').format(DateTime.parse(widget.date));
+                              final numberFormat = NumberFormat("#,##0", "en_US");
 
-                                final ByteData logoBytes = await rootBundle.load('assets/image/logo-print.png');
-                                final ByteData textBytes = await rootBundle.load('assets/image/text-print.png');
+                              String brand_store = pref.getString('brand_store') ?? '';
+                              String address_store = pref.getString('address_store') ?? '';
+                              String name_store = pref.getString('name_store') ?? '';
+                              String phone_store = pref.getString('phone_store') ?? '';
+                              String message_store = pref.getString('message_store') ?? '';
+                              String name = pref.getString('name') ?? '';
 
-                                final Uint8List logo = logoBytes.buffer.asUint8List(logoBytes.offsetInBytes, logoBytes.lengthInBytes);
-                                final Uint8List text = textBytes.buffer.asUint8List(textBytes.offsetInBytes, textBytes.lengthInBytes);
+                              final ByteData logoBytes = await rootBundle.load('assets/image/logo-print.png');
+                              final ByteData textBytes = await rootBundle.load('assets/image/text-print.png');
 
-                                printer.printImageBytes(logo);
-                                printer.printImageBytes(text);
-                                printer.printCustom('-- $brand_store --', 1, 1);
-                                printer.printCustom('-- $name_store --', 1, 1);
-                                printer.printCustom(tanggal, 1, 1);
-                                printer.printNewLine();
-                                printer.printCustom('Kasir     : $name', 1, 0);
-                                printer.printCustom('Pelanggan : ${widget.customer_trx}', 1, 0);
-                                printer.printCustom('--------------------------------', 1, 1);
-                                for (int i = 0; i < dataProses.length; i++) {
-                                  String namaProduk = '${count[i]}x ${dataProses[i]['name']}';
-                                  if (namaProduk.length < 21) {
-                                    for (int i = namaProduk.length; i < 21; i++) {
-                                      namaProduk += ' ';
-                                    }
-                                  } else if (namaProduk.length > 21) {
-                                    namaProduk = namaProduk.substring(0, 21);
-                                  }
-                                  String harga = numberFormat.format(count[i] * int.parse(dataProses[i]['harga'])).toString();
-                                  String space = '';
-                                  if (harga.length == 4) {
-                                    space = '      ';
-                                  } else if (harga.length == 5) {
-                                    space = '     ';
-                                  } else if (harga.length == 6) {
-                                    space = '    ';
-                                  } else if (harga.length == 7) {
-                                    space = '   ';
-                                  } else if (harga.length == 8) {
-                                    space = '   ';
-                                  }
-                                  printer.printCustom('$namaProduk$space$harga', 1, 0);
-                                }
-                                printer.printCustom('--------------------------------', 1, 1);
-                                printer.printCustom('TOTAL', 2, 1);
-                                printer.printCustom(numberFormat.format(total).toString(), 2, 1);
-                                printer.printCustom('--------------------------------', 1, 1);
-                                printer.printCustom(message_store, 1, 1);
-                                printer.printCustom(address_store, 1, 1);
-                                printer.printCustom(phone_store, 1, 1);
-                                printer.printNewLine();
-                                printer.printCustom(widget.number_trx, 1, 1);
-                                printer.printNewLine();
-                                printer.printNewLine();
+                              /// Example for Print Text
+                              final ReceiptSectionText receiptText = ReceiptSectionText();
+                              receiptText.addImage(
+                                base64.encode(Uint8List.view(logoBytes.buffer)),
+                                width: 100,
+                              );
+                              receiptText.addImage(
+                                base64.encode(Uint8List.view(textBytes.buffer)),
+                                width: 200,
+                              );
+
+                              receiptText.addText('-- $brand_store --', size: ReceiptTextSizeType.small);
+                              receiptText.addText('-- $name_store --', size: ReceiptTextSizeType.small);
+                              receiptText.addSpacer();
+                              receiptText.addText('Kasir     : $name', alignment: ReceiptAlignment.left, size: ReceiptTextSizeType.small);
+                              receiptText.addText('Pelanggan : ${widget.customer_trx}', alignment: ReceiptAlignment.left, size: ReceiptTextSizeType.small);
+                              receiptText.addSpacer(useDashed: true);
+                              for (int i = 0; i < dataProses.length; i++) {
+                                String namaProduk = '${count[i]}x ${dataProses[i]['name']}';
+                                String harga = numberFormat.format(count[i] * int.parse(dataProses[i]['harga'])).toString();
+
+                                receiptText.addLeftRightText(namaProduk, harga, leftSize: ReceiptTextSizeType.small, rightSize: ReceiptTextSizeType.small);
                               }
+                              receiptText.addSpacer(useDashed: true);
+                              receiptText.addText('TOTAL');
+                              receiptText.addText(numberFormat.format(total).toString());
+                              receiptText.addSpacer(useDashed: true);
+                              receiptText.addText(message_store, size: ReceiptTextSizeType.small);
+                              receiptText.addText(address_store, size: ReceiptTextSizeType.small);
+                              receiptText.addSpacer();
+                              receiptText.addText(widget.number_trx, size: ReceiptTextSizeType.small);
+                              receiptText.addSpacer();
+                              receiptText.addSpacer();
+
+                              await _bluePrintPos.printReceiptText(receiptText);
                             },
                       style: ButtonStyle(
                         backgroundColor: MaterialStateProperty.all(Colors.white),

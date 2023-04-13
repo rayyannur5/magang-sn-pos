@@ -1,21 +1,62 @@
 PODS:
+  - blue_print_pos (0.0.1):
+    - Flutter
+  - blue_thermal_printer (0.0.1):
+    - Flutter
+  - camera_avfoundation (0.0.1):
+    - Flutter
   - Flutter (1.0.0)
+  - flutter_blue_plus (0.0.1):
+    - Flutter
+    - flutter_blue_plus/Protos (= 0.0.1)
+  - flutter_blue_plus/Protos (0.0.1):
+    - Flutter
+    - Protobuf (~> 3.11)
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - Protobuf (3.22.1)
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
 
 DEPENDENCIES:
+  - blue_print_pos (from `.symlinks/plugins/blue_print_pos/ios`)
+  - blue_thermal_printer (from `.symlinks/plugins/blue_thermal_printer/ios`)
+  - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
   - Flutter (from `Flutter`)
+  - flutter_blue_plus (from `.symlinks/plugins/flutter_blue_plus/ios`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/ios`)
 
+SPEC REPOS:
+  trunk:
+    - Protobuf
+
 EXTERNAL SOURCES:
+  blue_print_pos:
+    :path: ".symlinks/plugins/blue_print_pos/ios"
+  blue_thermal_printer:
+    :path: ".symlinks/plugins/blue_thermal_printer/ios"
+  camera_avfoundation:
+    :path: ".symlinks/plugins/camera_avfoundation/ios"
   Flutter:
     :path: Flutter
+  flutter_blue_plus:
+    :path: ".symlinks/plugins/flutter_blue_plus/ios"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/ios"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/ios"
 
 SPEC CHECKSUMS:
+  blue_print_pos: 23e8b4bede0fc07cd75b3257783523ca332bf3cb
+  blue_thermal_printer: c83405103d2c17f8d67aaa43fcff94df5d616a66
+  camera_avfoundation: 3125e8cd1a4387f6f31c6c63abb8a55892a9eeeb
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  flutter_blue_plus: 6787777145d615de01828f3a9fa423c3c702f0b3
+  path_provider_foundation: c68054786f1b4f3343858c1e1d0caaded73f0be9
+  Protobuf: d7f7c8329edf5eb8af65547a8ba3e9c1cee927d5
   shared_preferences_foundation: 986fc17f3d3251412d18b0265f9c64113a8c2472
 
 PODFILE CHECKSUM: ef19549a9bc3046e7bb7d2fab4d021637c0c58a3
