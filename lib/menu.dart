@@ -84,6 +84,12 @@ class _MenuScreenState extends State<MenuScreen> {
                     currentScreen = const AbsenScreen();
                     currentTab = 1;
                   });
+                } else {
+                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
+                    return MenuScreen(initialPage: 0);
+                  }), (r) {
+                    return false;
+                  });
                 }
               },
             );
@@ -122,6 +128,12 @@ class _MenuScreenState extends State<MenuScreen> {
                           setState(() {
                             currentScreen = const ProfileScreen();
                             currentTab = 2;
+                          });
+                        } else {
+                          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
+                            return MenuScreen(initialPage: 0);
+                          }), (r) {
+                            return false;
                           });
                         }
                       },

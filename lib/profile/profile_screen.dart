@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sn_pos/cekgambar.dart';
 import 'package:sn_pos/home/itemProvider.dart';
 import 'package:sn_pos/login/auth.dart';
 import 'package:sn_pos/login/login_screen.dart';
@@ -133,6 +134,15 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            // ElevatedButton(
+            //     onPressed: () async {
+            //       var pref = await SharedPreferences.getInstance();
+            //       var imagePath = pref.getString('gambar_absen_path') ?? '';
+            //       if (imagePath != '') {
+            //         Nav.push(context, CekGambar(imagePath: imagePath));
+            //       }
+            //     },
+            //     child: Text('Cek gambar')),
             Container(
               padding: EdgeInsets.symmetric(horizontal: size.width / 15),
               alignment: Alignment.centerRight,

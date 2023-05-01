@@ -68,7 +68,9 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
       }
     }
     devices = await printer.getBondedDevices();
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void setDevice(BluetoothDevice device) async {
@@ -401,6 +403,10 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
                                         space = '   ';
                                       } else if (harga.length == 8) {
                                         space = '  ';
+                                      } else if (harga.length == 9) {
+                                        space = ' ';
+                                      } else if (harga.length == 10) {
+                                        space = '';
                                       }
                                       printer.printCustom('$namaProduk$space$harga', 1, 0);
                                     }
@@ -417,40 +423,17 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
                                       space = '   ';
                                     } else if (omset.length == 8) {
                                       space = '  ';
+                                    } else if (omset.length == 9) {
+                                      space = ' ';
+                                    } else if (omset.length == 10) {
+                                      space = '';
                                     }
-                                    printer.printCustom('Perolehan Omset       $space$omset', 1, 0);
-
-                                    String tabungan = numberFormat.format(dataGlobalResponse['tabungan']).toString();
-                                    if (tabungan.length == 4) {
-                                      space = '      ';
-                                    } else if (tabungan.length == 5) {
-                                      space = '     ';
-                                    } else if (tabungan.length == 6) {
-                                      space = '    ';
-                                    } else if (tabungan.length == 7) {
-                                      space = '   ';
-                                    } else if (tabungan.length == 8) {
-                                      space = '   ';
-                                    }
-                                    printer.printCustom('Tabungan Awal         $space$tabungan', 1, 0);
-                                    printer.printCustom('--------------------------------', 1, 1);
-                                    String totalTabungan = numberFormat.format(dataGlobalResponse['tabungan'] + dataGlobalResponse['dataAbsen']['total']).toString();
-                                    if (totalTabungan.length == 4) {
-                                      space = '      ';
-                                    } else if (totalTabungan.length == 5) {
-                                      space = '     ';
-                                    } else if (totalTabungan.length == 6) {
-                                      space = '    ';
-                                    } else if (totalTabungan.length == 7) {
-                                      space = '   ';
-                                    } else if (totalTabungan.length == 8) {
-                                      space = '  ';
-                                    }
-                                    printer.printCustom('Total Tabungan       $space$totalTabungan', 1, 0);
+                                    printer.printCustom('Perolehan Omset      $space$omset', 1, 0);
                                     printer.printCustom('--------------------------------', 1, 1);
 
                                     printer.printNewLine();
-                                    printer.printCustom('Terima kasih sudah bekerja dengan baik', 1, 1);
+                                    printer.printCustom('Terima kasih sudah bekerja', 1, 1);
+                                    printer.printCustom('dengan baik', 1, 1);
                                     printer.printCustom('Jangan lupa jaga kesehatan', 1, 1);
                                     printer.printNewLine();
                                     printer.printNewLine();

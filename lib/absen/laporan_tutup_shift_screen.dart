@@ -66,7 +66,9 @@ class _LaporanTutupShiftScreenState extends State<LaporanTutupShiftScreen> {
       }
     }
     devices = await printer.getBondedDevices();
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void setDevice(BluetoothDevice device) async {
@@ -405,6 +407,10 @@ class _LaporanTutupShiftScreenState extends State<LaporanTutupShiftScreen> {
                                         space = '   ';
                                       } else if (harga.length == 8) {
                                         space = '  ';
+                                      } else if (harga.length == 9) {
+                                        space = ' ';
+                                      } else if (harga.length == 10) {
+                                        space = '';
                                       }
                                       printer.printCustom('$namaProduk$space$harga', 1, 0);
                                     }
@@ -421,8 +427,12 @@ class _LaporanTutupShiftScreenState extends State<LaporanTutupShiftScreen> {
                                       space = '   ';
                                     } else if (omset.length == 8) {
                                       space = '  ';
+                                    } else if (omset.length == 9) {
+                                      space = ' ';
+                                    } else if (omset.length == 10) {
+                                      space = '';
                                     }
-                                    printer.printCustom('Perolehan Omset       $space$omset', 1, 0);
+                                    printer.printCustom('Perolehan Omset      $space$omset', 1, 0);
 
                                     String tabungan = numberFormat.format(dataGlobalResponse['tabungan']).toString();
                                     if (tabungan.length == 4) {
@@ -434,9 +444,13 @@ class _LaporanTutupShiftScreenState extends State<LaporanTutupShiftScreen> {
                                     } else if (tabungan.length == 7) {
                                       space = '   ';
                                     } else if (tabungan.length == 8) {
-                                      space = '   ';
+                                      space = '  ';
+                                    } else if (tabungan.length == 9) {
+                                      space = ' ';
+                                    } else if (tabungan.length == 10) {
+                                      space = '';
                                     }
-                                    printer.printCustom('Tabungan Awal         $space$tabungan', 1, 0);
+                                    printer.printCustom('Tabungan Awal        $space$tabungan', 1, 0);
                                     printer.printCustom('--------------------------------', 1, 1);
                                     String totalTabungan = numberFormat.format(dataGlobalResponse['tabungan'] + dataGlobalResponse['dataAbsen']['total']).toString();
                                     if (totalTabungan.length == 4) {
@@ -449,6 +463,10 @@ class _LaporanTutupShiftScreenState extends State<LaporanTutupShiftScreen> {
                                       space = '   ';
                                     } else if (totalTabungan.length == 8) {
                                       space = '  ';
+                                    } else if (totalTabungan.length == 9) {
+                                      space = ' ';
+                                    } else if (totalTabungan.length == 10) {
+                                      space = '';
                                     }
                                     printer.printCustom('Total Tabungan       $space$totalTabungan', 1, 0);
                                     printer.printCustom('--------------------------------', 1, 1);
