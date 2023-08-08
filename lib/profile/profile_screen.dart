@@ -6,6 +6,7 @@ import 'package:sn_pos/login/auth.dart';
 import 'package:sn_pos/login/login_screen.dart';
 import 'package:sn_pos/menu.dart';
 import 'package:sn_pos/profile/change_password_screen.dart';
+import 'package:sn_pos/profile/report_tambahan_screen.dart';
 import 'package:sn_pos/styles/navigator.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -110,6 +111,25 @@ class ProfileScreen extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     padding: EdgeInsets.only(left: size.width / 15),
                     child: const Text('Laporan Setoran', textAlign: TextAlign.start, style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: size.width / 15),
+              child: Material(
+                color: Colors.white,
+                child: InkWell(
+                  onTap: () => Nav.push(context, ReportTambahan()),
+                  child: Container(
+                    width: size.width,
+                    height: size.height / 20,
+                    decoration: const BoxDecoration(
+                      border: Border(bottom: BorderSide(width: 1, color: Colors.grey)),
+                    ),
+                    alignment: Alignment.centerLeft,
+                    padding: EdgeInsets.only(left: size.width / 15),
+                    child: const Text('Laporan Tambahan', textAlign: TextAlign.start, style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600)),
                   ),
                 ),
               ),

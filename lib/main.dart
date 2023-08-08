@@ -25,6 +25,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
           title: 'SN POS',
           theme: ThemeData(
+            fontFamily: 'Poppins',
             primarySwatch: Colors.blue,
           ),
           home: FutureBuilder<dynamic>(

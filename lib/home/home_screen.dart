@@ -54,34 +54,33 @@ class _HomeScreenState extends State<HomeScreen> {
         } catch (e) {
           print(e);
           // ignore: use_build_context_synchronously
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              duration: Duration(seconds: 5),
-              content: Text("Transaksi belum terkirim, tidak ada koneksi internet"),
-            ));
-          }
+          // if (mounted) {
+          //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          //     duration: Duration(seconds: 5),
+          //     content: Text("Transaksi belum terkirim, tidak ada koneksi internet"),
+          //   ));
+          // }
         }
       }
     }
   }
 
   _HomeScreenState() {
-    kirimTRXkeDB();
-    sendFTP();
+    sendFTP().then((value) => kirimTRXkeDB());
+    // kirimTRXkeDB();a         q11]
   }
 
-  void sendFTP() async {
+  Future sendFTP() async {
     var pref = await SharedPreferences.getInstance();
     bool readyKirim = pref.getBool('ready_kirim') ?? false;
     var imagePath = pref.getString('gambar_absen_path') ?? '';
     print('readykirim : $readyKirim');
     if (!readyKirim) return;
     if (imagePath != '') {
-      Absen().sendFTP(imagePath).then((value) {
-        if (value != 'default.png') {
-          pref.setBool('ready_kirim', false);
-        }
-      });
+      var value = await Absen().sendFTP(imagePath);
+      if (value != 'default.png') {
+        pref.setBool('ready_kirim', false);
+      }
     }
   }
 
@@ -103,6 +102,33 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
     return Scaffold(
+      floatingActionButton: FutureBuilder<dynamic>(
+          future: Absen().cekApakahAdaTransaksi(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) return const SizedBox();
+            if (snapshot.data == 0) return const SizedBox();
+            return SizedBox(
+              height: 30,
+              child: ElevatedButton(
+                onPressed: kirimTRXkeDB,
+                style: ButtonStyle(shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)))),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Text(snapshot.data.toString()),
+                  ],
+                ),
+              ),
+            );
+          }),
       body: Consumer<ItemManagement>(
         builder: (context, itemManagement, child) => FutureBuilder<dynamic>(
             future: Absen().cekAbsenHariIni(),

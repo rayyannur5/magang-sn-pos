@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_pos/home/itemProvider.dart';
 import 'package:sn_pos/styles/general_button.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../menu.dart';
 import '../no_internet_screen.dart';
@@ -12,9 +13,10 @@ import '../styles/navigator.dart';
 import 'absen.dart';
 
 class SendAbsenScreen extends StatefulWidget {
-  const SendAbsenScreen({super.key, required this.imagePath, required this.imageName});
+  const SendAbsenScreen({super.key, required this.imagePath, required this.imageName, required this.position});
   final String imagePath;
   final String imageName;
+  final Position position;
 
   @override
   State<SendAbsenScreen> createState() => _SendAbsenScreenState();
@@ -24,6 +26,7 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
   int shift = 1;
   String outletTerpilih = "Pilih Outlet";
   List dataOutlet = [];
+  double? distance;
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +73,18 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                     child: Image.file(File(widget.imagePath)),
                   ),
                 ),
+                Center(
+                    child: outletTerpilih != 'Pilih Outlet'
+                        ? Container(
+                            height: 20,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                            decoration: BoxDecoration(color: distance! > 50 ? Colors.redAccent : Colors.green, borderRadius: BorderRadius.circular(10)),
+                            child: Text(
+                              distance! > 50 ? 'Diluar Jangkauan' : 'Didalam Jangkauan',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          )
+                        : const SizedBox(height: 20)),
                 cekAbsen.data != 'SUDAH_ABSEN_MASUK'
                     ? Padding(
                         padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: 10),
@@ -100,37 +115,27 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                           for (int i = 0; i < dataOutlet.length; i++) {
                             outlet.add(dataOutlet[i]['name_store']);
                           }
-                          return Container(
-                            width: size.width,
-                            // height: 70,
+                          return Padding(
                             padding: EdgeInsets.symmetric(horizontal: size.width / 15),
-                            child: DropdownButton(
-                              isExpanded: true,
-                              dropdownColor: Colors.white,
+                            child: DropdownButtonFormField(
                               value: outletTerpilih,
-                              underline: Container(
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: const Color(0xff0077B6)),
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                              ),
-                              borderRadius: BorderRadius.circular(15),
-                              onChanged: (value) {
-                                outletTerpilih = value ?? "Pilih Outlet";
-                                for (int i = 0; i < dataOutlet.length; i++) {
-                                  if (dataOutlet[i]['name_store'] == outletTerpilih) {
-                                    print(dataOutlet[i]);
-                                  }
-                                }
-                                setState(() {});
-                              },
+                              decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(25))),
                               items: outlet.map<DropdownMenuItem<String>>((String value) {
                                 return DropdownMenuItem<String>(
                                   value: value,
                                   child: Text(value),
                                 );
                               }).toList(),
+                              onChanged: (value) {
+                                outletTerpilih = value ?? "Pilih Outlet";
+                                for (int i = 0; i < dataOutlet.length; i++) {
+                                  if (dataOutlet[i]['name_store'] == outletTerpilih) {
+                                    distance = Geolocator.distanceBetween(
+                                        widget.position.latitude, widget.position.longitude, double.parse(dataOutlet[i]['lat_store']), double.parse(dataOutlet[i]['long_store']));
+                                  }
+                                }
+                                setState(() {});
+                              },
                             ),
                           );
                         })
@@ -224,6 +229,7 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                           var pref = await SharedPreferences.getInstance();
                           if (cekAbsen.data != 'SUDAH_ABSEN_MASUK') {
                             if (outletTerpilih == 'Pilih Outlet') {
+                              // ignore: use_build_context_synchronously
                               showDialog(
                                   context: context,
                                   builder: (context) => const AlertDialog(
@@ -234,6 +240,18 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                                       )));
                               return;
                             }
+                            // else if (distance! > 50) {
+                            //   // ignore: use_build_context_synchronously
+                            //   showDialog(
+                            //       context: context,
+                            //       builder: (context) => const AlertDialog(
+                            //           icon: Icon(Icons.warning_amber),
+                            //           content: Text(
+                            //             'Diluar Jangkauan',
+                            //             textAlign: TextAlign.center,
+                            //           )));
+                            //   return;
+                            // }
 
                             var storeId;
                             for (int i = 0; i < dataOutlet.length; i++) {
@@ -261,7 +279,7 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                             );
 
                             pref.setBool('ready_kirim', true);
-                            Absen().sendAbsenMasuk(storeId, shift, widget.imageName).then((value) {
+                            Absen().sendAbsenMasuk(storeId, shift, widget.imageName, widget.position.latitude, widget.position.longitude).then((value) {
                               if (value == '1') {
                                 itemManagement.setItems([], 0);
                                 Nav.pop(context);

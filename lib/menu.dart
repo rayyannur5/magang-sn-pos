@@ -79,7 +79,7 @@ class _MenuScreenState extends State<MenuScreen> {
           onPressed: () {
             Absen().cekApakahAdaTransaksi().then(
               (value) {
-                if (!value) {
+                if (value == 0) {
                   setState(() {
                     currentScreen = const AbsenScreen();
                     currentTab = 1;
@@ -124,7 +124,7 @@ class _MenuScreenState extends State<MenuScreen> {
                   onPressed: () {
                     Absen().cekApakahAdaTransaksi().then(
                       (value) {
-                        if (!value) {
+                        if (value == 0) {
                           setState(() {
                             currentScreen = const ProfileScreen();
                             currentTab = 2;

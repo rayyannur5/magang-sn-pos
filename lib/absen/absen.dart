@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,7 +45,7 @@ class Absen {
     }
   }
 
-  Future sendFTP(String imagePath) async {
+  Future<String> sendFTP(String imagePath) async {
     var pref = await SharedPreferences.getInstance();
 
     var ftphost = pref.getString('ftp_server') ?? '191.101.230.27';
@@ -74,14 +75,14 @@ class Absen {
     await ftpConnect.disconnect();
     if (res) {
       // Navigator.pop(context);
-      pref.setString('gambar_absen_path', '');
+      await pref.setString('gambar_absen_path', '');
       return imagePath;
     } else {
       return 'default.jpg';
     }
   }
 
-  Future<String> sendAbsenMasuk(storeId, shift, imageIn) async {
+  Future<String> sendAbsenMasuk(storeId, shift, imageIn, lat, long) async {
     try {
       var pref = await SharedPreferences.getInstance();
       String idUser = pref.getString('id_user') ?? "0";
@@ -92,6 +93,8 @@ class Absen {
         'shift': shift.toString(),
         'store_id': storeId,
         'key': key,
+        'lat': lat.toString(),
+        'long': long.toString(),
       });
 
       String strResponse = response.body;
@@ -133,14 +136,15 @@ class Absen {
     }
   }
 
-  Future<bool> cekApakahAdaTransaksi() async {
+  Future<int> cekApakahAdaTransaksi() async {
     var pref = await SharedPreferences.getInstance();
+    int count = 0;
     for (var i in pref.getKeys()) {
       if (i.contains('TRX')) {
-        return true;
+        count++;
       }
     }
-    return false;
+    return count;
   }
 
   Future absensiReport(beginDate, endDate) async {

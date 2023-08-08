@@ -7,10 +7,13 @@ class Constants {
   static const String urlLogin = '$url/login_new.php';
   static const String urlKatalog = '$url/katalog_new_updt.php';
   static const String urlDataOutlet = '$url/data_outlet.php';
+  static const String urlDataKategori = '$url/data_kategori.php';
   static const String urlCekAbsensi = '$url/absensi.php';
-  static const String urlAbsenMasuk = '$url/absensi_create.php';
+  // static const String urlAbsenMasuk = '$url/absensi_create.php';
+  static const String urlAbsenMasuk = '$url/absensi_create_vGPS.php';
   static const String urlAbsenKeluar = '$url/absensi_update.php';
   static const String urlKirimTransaksi = '$url/add_trx_updt.php';
+  static const String urlReportCreate = '$url/report_create.php';
   // static const String urlKirimTransaksi = '$url/new_tambah_trx_v6.php';
   static const String urlAbsensiReport = '$url/absensi_report_updt.php';
   static const String urlSetoranReport = '$url/setoran_report_updt.php';

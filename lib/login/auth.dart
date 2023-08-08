@@ -8,7 +8,7 @@ class Auth {
       var response = await http.post(Uri.parse(Constants.urlLogin), body: {'email': email, 'password': password});
       if (response.body != '2' && response.body != '3') {
         var dataUser = response.body.split('aytech--');
-        // print('login sukses : ${dataUser[0]}');
+        print('login sukses : $dataUser');
         SharedPreferences pref = await SharedPreferences.getInstance();
         pref.setString('id_user', dataUser[0]);
         pref.setString('name', dataUser[1]);
