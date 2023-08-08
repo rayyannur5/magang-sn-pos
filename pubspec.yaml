@@ -44,6 +44,12 @@ dependencies:
   ftpconnect: ^2.0.2
   intl: ^0.17.0
   blue_thermal_printer: ^1.2.3
+  share_plus: ^7.1.0
+  screenshot: ^2.1.0
+  url_launcher: ^6.1.12
+  image: ^4.0.17
+  image_gallery_saver: ^2.0.3
+  jpeg_encode: ^1.0.1
 
 dev_dependencies:
   flutter_test:
@@ -100,6 +106,11 @@ flutter:
     - family: Ubuntu
       fonts:
         - asset: assets/Ubuntu/Ubuntu-Bold.ttf
+    - family: SpaceMono
+      fonts:
+        - asset: assets/Space_Mono/SpaceMono-Regular.ttf
+        - asset: assets/Space_Mono/SpaceMono-Bold.ttf
+          weight: 700
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

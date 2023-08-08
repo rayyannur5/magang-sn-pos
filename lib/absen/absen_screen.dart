@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_pos/absen/camera_screen.dart';
-import 'package:http/http.dart' as http;
 import 'package:sn_pos/absen/laporan_tutup_shift_screen.dart';
 import 'package:sn_pos/styles/navigator.dart';
 
-import '../constants.dart';
 import '../no_internet_screen.dart';
 import 'absen.dart';
 import 'laporan_detail_absen.dart';
@@ -44,7 +41,7 @@ class _AbsenScreenState extends State<AbsenScreen> {
               print(snapshot.data);
               if (snapshot.data == '404') {
                 SchedulerBinding.instance.addPostFrameCallback((_) {
-                  Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => NoInternetScreen()));
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const NoInternetScreen()));
                 });
               }
               return Container(
@@ -81,11 +78,11 @@ class _AbsenScreenState extends State<AbsenScreen> {
                                   : snapshot.data == 'SUDAH_ABSEN_MASUK'
                                       ? 'Absen Keluar'
                                       : 'error',
-                              style: TextStyle(fontFamily: 'Poppins'),
+                              style: const TextStyle(fontFamily: 'Poppins'),
                             ))
                         : ElevatedButton(
                             onPressed: () {
-                              Nav.push(context, LaporanTutupShiftScreen());
+                              Nav.push(context, const LaporanTutupShiftScreen());
                             },
                             style: ButtonStyle(
                                 shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(7.5))),
@@ -125,7 +122,7 @@ class _AbsenScreenState extends State<AbsenScreen> {
                         color: Colors.grey,
                         borderRadius: BorderRadius.circular(15),
                       ),
-                      child: Center(child: Text(begin_date.toString().substring(0, 10), style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700))),
+                      child: Center(child: Text(begin_date.toString().substring(0, 10), style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700))),
                     ),
                     Container(
                       height: 40,
@@ -134,7 +131,7 @@ class _AbsenScreenState extends State<AbsenScreen> {
                         color: Colors.grey,
                         borderRadius: BorderRadius.circular(15),
                       ),
-                      child: Center(child: Text(end_date.toString().substring(0, 10), style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700))),
+                      child: Center(child: Text(end_date.toString().substring(0, 10), style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700))),
                     ),
                   ],
                 ),
@@ -187,14 +184,14 @@ class _AbsenScreenState extends State<AbsenScreen> {
             children: [
               Container(
                 width: size.width / 2.3,
-                padding: EdgeInsets.only(left: 15),
+                padding: const EdgeInsets.only(left: 15),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(absensi['name_store'], style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600)),
+                    Text(absensi['name_store'], style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600)),
                     Text('Masuk : ${absensi['created_at']}\nKeluar : ${absensi['created_at'] == absensi['updated_at'] ? 'BELUM ABSEN' : absensi['updated_at']}',
-                        style: TextStyle(fontFamily: 'Poppins', fontSize: 10)),
+                        style: const TextStyle(fontFamily: 'Poppins', fontSize: 10)),
                   ],
                 ),
               ),
@@ -214,7 +211,7 @@ class _AbsenScreenState extends State<AbsenScreen> {
                             color: Colors.amber,
                             borderRadius: BorderRadius.circular(7.5),
                           ),
-                          child: Center(child: Text('Shift ${absensi['shift']}', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700))),
+                          child: Center(child: Text('Shift ${absensi['shift']}', style: const TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700))),
                         ),
                         absensi['description'] == 'Terlambat'
                             ? Container(
@@ -246,8 +243,8 @@ class _AbsenScreenState extends State<AbsenScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          '${numberFormat.format(absensi['total'])}',
-                          style: TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
+                          numberFormat.format(absensi['total']),
+                          style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
                         ),
                       ),
                     ),

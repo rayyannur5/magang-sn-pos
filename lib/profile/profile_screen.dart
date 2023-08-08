@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sn_pos/cekgambar.dart';
 import 'package:sn_pos/home/itemProvider.dart';
 import 'package:sn_pos/login/auth.dart';
 import 'package:sn_pos/login/login_screen.dart';
@@ -63,7 +62,7 @@ class ProfileScreen extends StatelessWidget {
                 borderRadius: const BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15)),
                 child: InkWell(
                   borderRadius: const BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15)),
-                  onTap: () => Nav.pushReplacement(context, MenuScreen(initialPage: 3)),
+                  onTap: () => Nav.pushReplacement(context, const MenuScreen(initialPage: 3)),
                   child: Container(
                     width: size.width,
                     height: size.height / 20,
@@ -82,7 +81,7 @@ class ProfileScreen extends StatelessWidget {
               child: Material(
                 color: Colors.white,
                 child: InkWell(
-                  onTap: () => Nav.pushReplacement(context, MenuScreen(initialPage: 4)),
+                  onTap: () => Nav.pushReplacement(context, const MenuScreen(initialPage: 4)),
                   child: Container(
                     width: size.width,
                     height: size.height / 20,
@@ -101,7 +100,7 @@ class ProfileScreen extends StatelessWidget {
               child: Material(
                 color: Colors.white,
                 child: InkWell(
-                  onTap: () => Nav.pushReplacement(context, MenuScreen(initialPage: 5)),
+                  onTap: () => Nav.pushReplacement(context, const MenuScreen(initialPage: 5)),
                   child: Container(
                     width: size.width,
                     height: size.height / 20,
@@ -174,9 +173,9 @@ class ProfileScreen extends StatelessWidget {
                   child: SizedBox(
                     height: size.height / 20,
                     width: size.width / 3,
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Icon(Icons.logout, color: Colors.white),
                         Text(
                           'Logout',

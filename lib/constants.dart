@@ -17,4 +17,6 @@ class Constants {
   static const String urlPenjualanReport = '$url/transactions_updt.php';
   static const String urlDetailTransaksi = '$url/transactions_print_updt.php';
   static const String urlChangePassword = '$url/password_update.php';
+  static const String urlCheckRecipe = '$url/recipe_check.php';
+  static const String urlCreateRecipe = '$url/recipe_create.php';
 }

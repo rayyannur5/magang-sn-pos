@@ -41,8 +41,9 @@ class ItemManagement extends ChangeNotifier {
   List getItemsSelected() {
     List result = [];
     for (int i = 0; i < _banyakItems; i++) {
-      if (_penghitungItem[i] != 0)
+      if (_penghitungItem[i] != 0) {
         result.add({'id_produk': _item[i]['id_produk'], 'name': _item[i]['nama_produk'], 'count': _penghitungItem[i], 'price': _penghitungItem[i] * int.parse(_item[i]['harga_produk'])});
+      }
     }
     return result;
   }

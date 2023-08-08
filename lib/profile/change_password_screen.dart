@@ -28,10 +28,10 @@ class _UbahPasswordScreenState extends State<UbahPasswordScreen> {
 
   Future changePassword(password) async {
     var pref = await SharedPreferences.getInstance();
-    var user_id = pref.getString('id_user');
+    var userId = pref.getString('id_user');
     try {
       var response = await http.post(Uri.parse(Constants.urlChangePassword), body: {
-        'user_id': user_id,
+        'user_id': userId,
         'key': Constants.key,
         'password': password,
       });
@@ -222,7 +222,7 @@ class _UbahPasswordScreenState extends State<UbahPasswordScreen> {
                               if (value == 'password-') {
                                 Auth().logout().then((value) {
                                   Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
-                                    return LoginScreen();
+                                    return const LoginScreen();
                                   }), (r) {
                                     return false;
                                   });

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sn_pos/absen/laporan_detail_absen.dart';
-import 'package:sn_pos/absen/laporan_tutup_shift_screen.dart';
 import 'package:sn_pos/menu.dart';
 import '../absen/absen.dart';
 import '../styles/navigator.dart';
@@ -14,7 +13,7 @@ class LaporanAbsensiScreen extends StatefulWidget {
 }
 
 class _LaporanAbsensiScreenState extends State<LaporanAbsensiScreen> {
-  DateTime begin_date = DateTime.now().subtract(Duration(days: 7));
+  DateTime begin_date = DateTime.now().subtract(const Duration(days: 7));
   DateTime end_date = DateTime.now();
   List tempHasilAbsen = [];
   int terlambat = 0;
@@ -33,10 +32,11 @@ class _LaporanAbsensiScreenState extends State<LaporanAbsensiScreen> {
             List hasilAbsensi = snapshot.data;
             if (tempHasilAbsen != hasilAbsensi) {
               for (int i = 0; i < hasilAbsensi.length; i++) {
-                if (hasilAbsensi[i]['description'] == 'Terlambat')
+                if (hasilAbsensi[i]['description'] == 'Terlambat') {
                   terlambat++;
-                else
+                } else {
                   tepatwaktu++;
+                }
               }
               tempHasilAbsen = hasilAbsensi;
             }
@@ -49,7 +49,7 @@ class _LaporanAbsensiScreenState extends State<LaporanAbsensiScreen> {
                   child: Row(
                     children: [
                       IconButton(
-                          onPressed: () => Nav.pushReplacement(context, MenuScreen(initialPage: 2)),
+                          onPressed: () => Nav.pushReplacement(context, const MenuScreen(initialPage: 2)),
                           icon: const Icon(
                             Icons.navigate_before,
                             size: 25,
@@ -83,7 +83,7 @@ class _LaporanAbsensiScreenState extends State<LaporanAbsensiScreen> {
                             color: Colors.grey,
                             borderRadius: BorderRadius.circular(15),
                           ),
-                          child: Center(child: Text(begin_date.toString().substring(0, 10), style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700))),
+                          child: Center(child: Text(begin_date.toString().substring(0, 10), style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700))),
                         ),
                         Container(
                           height: 40,
@@ -92,7 +92,7 @@ class _LaporanAbsensiScreenState extends State<LaporanAbsensiScreen> {
                             color: Colors.grey,
                             borderRadius: BorderRadius.circular(15),
                           ),
-                          child: Center(child: Text(end_date.toString().substring(0, 10), style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700))),
+                          child: Center(child: Text(end_date.toString().substring(0, 10), style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700))),
                         ),
                       ],
                     ),
@@ -168,14 +168,14 @@ class _LaporanAbsensiScreenState extends State<LaporanAbsensiScreen> {
             children: [
               Container(
                 width: size.width / 2.3,
-                padding: EdgeInsets.only(left: 15),
+                padding: const EdgeInsets.only(left: 15),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(absensi['name_store'], style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600)),
+                    Text(absensi['name_store'], style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600)),
                     Text('Masuk : ${absensi['created_at']}\nKeluar : ${absensi['created_at'] == absensi['updated_at'] ? 'BELUM ABSEN' : absensi['updated_at']}',
-                        style: TextStyle(fontFamily: 'Poppins', fontSize: 10)),
+                        style: const TextStyle(fontFamily: 'Poppins', fontSize: 10)),
                   ],
                 ),
               ),
@@ -195,7 +195,7 @@ class _LaporanAbsensiScreenState extends State<LaporanAbsensiScreen> {
                             color: Colors.amber,
                             borderRadius: BorderRadius.circular(7.5),
                           ),
-                          child: Center(child: Text('Shift ${absensi['shift']}', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700))),
+                          child: Center(child: Text('Shift ${absensi['shift']}', style: const TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700))),
                         ),
                         absensi['description'] == 'Terlambat'
                             ? Container(
@@ -227,8 +227,8 @@ class _LaporanAbsensiScreenState extends State<LaporanAbsensiScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          '${numberFormat.format(absensi['total'])}',
-                          style: TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
+                          numberFormat.format(absensi['total']),
+                          style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
                         ),
                       ),
                     ),

@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_pos/home/itemProvider.dart';
-import 'package:sn_pos/home/items.dart';
 import 'package:sn_pos/home/success_transaction_screen.dart';
 import 'package:sn_pos/styles/general_button.dart';
 
@@ -26,8 +25,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Future bayar(List item, DateTime date) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
-    var id_user = pref.getString('id_user') ?? '0';
-    int id_user1000 = 1000 + int.parse(id_user);
+    var idUser = pref.getString('id_user') ?? '0';
+    int idUser1000 = 1000 + int.parse(idUser);
 
     var year = date.year.toString();
     var month = date.month < 10 ? '0${date.month.toString()}' : date.month.toString();
@@ -36,7 +35,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     var minute = date.minute < 10 ? '0${date.minute.toString()}' : date.minute.toString();
     var second = date.second < 10 ? '0${date.second.toString()}' : date.second.toString();
 
-    var id_trx = id_user1000.toString() + year + month + day + hour + minute + second;
+    var idTrx = idUser1000.toString() + year + month + day + hour + minute + second;
 
     String dataTerpilih = "";
     for (int i = 0; i < item.length; i++) {
@@ -46,8 +45,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
     print(dataTerpilih);
 
-    await pref.setString('TRX-$id_trx', dataTerpilih);
-    id = 'TRX-$id_trx';
+    await pref.setString('TRX-$idTrx', dataTerpilih);
+    id = 'TRX-$idTrx';
   }
 
   @override
@@ -95,7 +94,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
                           ),
                           Text(
-                            '${numberFormat.format(i['price'])}',
+                            numberFormat.format(i['price']),
                             style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w900),
                           )
                         ],
@@ -107,7 +106,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('Total', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600)),
-                        Text('${numberFormat.format(itemManagement.getPrice())}', style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600))
+                        Text(numberFormat.format(itemManagement.getPrice()), style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600))
                       ],
                     ),
                   ),
@@ -117,7 +116,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('Kembalian', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600)),
-                        Text('${numberFormat.format((int.tryParse(cash.text) is int ? int.parse(cash.text) : 0) - itemManagement.getPrice())}',
+                        Text(numberFormat.format((int.tryParse(cash.text) is int ? int.parse(cash.text) : 0) - itemManagement.getPrice()),
                             style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600))
                       ],
                     ),

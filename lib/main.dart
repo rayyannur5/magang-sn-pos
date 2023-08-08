@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
                 // print(snapshot.data);
                 if (snapshot.data == '404') return const NoInternetScreen();
                 if (snapshot.data == '2' || snapshot.data == '3') return const LandingScreen();
-                return MenuScreen(initialPage: 0);
+                return const MenuScreen(initialPage: 0);
               })),
     );
   }

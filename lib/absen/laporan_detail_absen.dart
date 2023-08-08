@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import 'package:intl/intl.dart';
@@ -15,7 +14,7 @@ import '../styles/general_button.dart';
 import '../styles/navigator.dart';
 
 class LaporanDetailAbsen extends StatefulWidget {
-  LaporanDetailAbsen({super.key, required this.date});
+  const LaporanDetailAbsen({super.key, required this.date});
   final DateTime date;
 
   @override
@@ -42,20 +41,20 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
     bool cek = await printer.isConnected ?? false;
     if (cek) {
       var pref = await SharedPreferences.getInstance();
-      String BL_NAME = pref.getString('BL_NAME') ?? '';
-      String BL_ADDRESS = pref.getString('BL_ADDRESS') ?? '';
-      if (BL_ADDRESS.isNotEmpty) {
-        selectedDevice = BluetoothDevice(BL_NAME, BL_ADDRESS);
+      String blName = pref.getString('BL_NAME') ?? '';
+      String blAddress = pref.getString('BL_ADDRESS') ?? '';
+      if (blAddress.isNotEmpty) {
+        selectedDevice = BluetoothDevice(blName, blAddress);
       }
       setState(() {
         isConnect = true;
       });
     } else {
       var pref = await SharedPreferences.getInstance();
-      String BL_NAME = pref.getString('BL_NAME') ?? '';
-      String BL_ADDRESS = pref.getString('BL_ADDRESS') ?? '';
-      if (BL_ADDRESS.isNotEmpty) {
-        selectedDevice = BluetoothDevice(BL_NAME, BL_ADDRESS);
+      String blName = pref.getString('BL_NAME') ?? '';
+      String blAddress = pref.getString('BL_ADDRESS') ?? '';
+      if (blAddress.isNotEmpty) {
+        selectedDevice = BluetoothDevice(blName, blAddress);
         try {
           await printer.connect(selectedDevice!).then((value) {
             if (value) {
@@ -173,10 +172,10 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
 
   Future getSetoran() async {
     var pref = await SharedPreferences.getInstance();
-    var id_user = pref.getString('id_user');
+    var idUser = pref.getString('id_user');
 
     try {
-      var response = await http.get(Uri.parse('${Constants.urlSetoranReport}?id_user=$id_user'));
+      var response = await http.get(Uri.parse('${Constants.urlSetoranReport}?id_user=$idUser'));
       var dataResponse = jsonDecode(response.body);
       return dataResponse;
     } catch (e) {
@@ -186,12 +185,12 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
 
   Future getPenjualan() async {
     var pref = await SharedPreferences.getInstance();
-    var id_user = pref.getString('id_user');
+    var idUser = pref.getString('id_user');
     String formattedBeginDate = DateFormat('yyyy-MM-dd').format(date);
     String formattedEndDate = DateFormat('yyyy-MM-dd').format(date);
 
     try {
-      var response = await http.get(Uri.parse('${Constants.urlPenjualanReport}?user_id=$id_user&key=${Constants.key}&begin_date=$formattedBeginDate&end_date=$formattedEndDate'));
+      var response = await http.get(Uri.parse('${Constants.urlPenjualanReport}?user_id=$idUser&key=${Constants.key}&begin_date=$formattedBeginDate&end_date=$formattedEndDate'));
       return jsonDecode(response.body);
     } catch (e) {
       print(e);
@@ -199,9 +198,9 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
     }
   }
 
-  Future getTransaksi(trx, store_id) async {
+  Future getTransaksi(trx, storeId) async {
     try {
-      var response = await http.post(Uri.parse(Constants.urlDetailTransaksi), body: {'key': Constants.key, 'number_trx': trx, 'store_id': store_id});
+      var response = await http.post(Uri.parse(Constants.urlDetailTransaksi), body: {'key': Constants.key, 'number_trx': trx, 'store_id': storeId});
       return jsonDecode(response.body);
     } catch (e) {
       print(e);
@@ -259,11 +258,11 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
                           children: [
                             Text(
                               '${response['dataJumlah'][i]}x  ${response['dataProses'][i]['name']}',
-                              style: TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w600),
+                              style: const TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w600),
                             ),
                             Text(
-                              '${numberFormat.format(response['dataJumlah'][i] * int.parse(response['dataProses'][i]['harga']))}',
-                              style: TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w600),
+                              numberFormat.format(response['dataJumlah'][i] * int.parse(response['dataProses'][i]['harga'])),
+                              style: const TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -275,19 +274,19 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
             height: size.height / 3,
             child: Column(
               children: [
-                Spacer(),
+                const Spacer(),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: size.width / 15),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       DropdownButton<BluetoothDevice>(
-                        hint: Text('Pilih Printer'),
+                        hint: const Text('Pilih Printer'),
                         value: selectedDevice,
                         items: devices
                             .map((e) => DropdownMenuItem(
-                                  child: Text(e.name!),
                                   value: e,
+                                  child: Text(e.name!),
                                 ))
                             .toList(),
                         onChanged: (value) {
@@ -328,7 +327,7 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
                                       }
                                     },
                               style: ButtonStyle(shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(7.5)))),
-                              child: Text('Hubungkan'))
+                              child: const Text('Hubungkan'))
                           : ElevatedButton(
                               onPressed: () {
                                 printer.disconnect().then((value) {
@@ -339,7 +338,7 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
                               },
                               style: ButtonStyle(
                                   backgroundColor: MaterialStatePropertyAll(Colors.red.shade700), shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(7.5)))),
-                              child: Text('Putuskan')),
+                              child: const Text('Putuskan')),
                     ],
                   ),
                 ),
@@ -441,7 +440,7 @@ class _LaporanDetailAbsenState extends State<LaporanDetailAbsen> {
                                 },
                       style: ButtonStyle(
                         backgroundColor: MaterialStateProperty.all(Colors.white),
-                        shape: MaterialStateProperty.all(RoundedRectangleBorder(side: BorderSide(width: 1), borderRadius: BorderRadius.circular(15.0))),
+                        shape: MaterialStateProperty.all(RoundedRectangleBorder(side: const BorderSide(width: 1), borderRadius: BorderRadius.circular(15.0))),
                       ),
                       child: const Text('Cetak Transaksi', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, color: Colors.black)),
                     ),

@@ -25,10 +25,10 @@ class _MenuScreenState extends State<MenuScreen> {
 
   List screen = [
     HomeScreen(),
-    AbsenScreen(),
+    const AbsenScreen(),
     const ProfileScreen(),
-    LaporanPenjualanScreen(),
-    LaporanAbsensiScreen(),
+    const LaporanPenjualanScreen(),
+    const LaporanAbsensiScreen(),
     LaporanSetoranScreen(),
   ];
 
@@ -57,8 +57,8 @@ class _MenuScreenState extends State<MenuScreen> {
                       children: [
                         ElevatedButton(onPressed: () {}, child: const Text('Rating')),
                         const Spacer(),
-                        TextButton(onPressed: () => exit(0), child: Row(children: const [Icon(Icons.check, color: Colors.red), Text('Keluar', style: TextStyle(color: Colors.red))])),
-                        TextButton(onPressed: () => Nav.pop(context), child: Row(children: const [Icon(Icons.close), Text('Batal')]))
+                        TextButton(onPressed: () => exit(0), child: const Row(children: [Icon(Icons.check, color: Colors.red), Text('Keluar', style: TextStyle(color: Colors.red))])),
+                        TextButton(onPressed: () => Nav.pop(context), child: const Row(children: [Icon(Icons.close), Text('Batal')]))
                       ],
                     )
                   ],
@@ -86,7 +86,7 @@ class _MenuScreenState extends State<MenuScreen> {
                   });
                 } else {
                   Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
-                    return MenuScreen(initialPage: 0);
+                    return const MenuScreen(initialPage: 0);
                   }), (r) {
                     return false;
                   });
@@ -131,7 +131,7 @@ class _MenuScreenState extends State<MenuScreen> {
                           });
                         } else {
                           Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
-                            return MenuScreen(initialPage: 0);
+                            return const MenuScreen(initialPage: 0);
                           }), (r) {
                             return false;
                           });

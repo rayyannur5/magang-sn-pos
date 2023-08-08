@@ -23,12 +23,12 @@ class _LaporanPenjualanScreenState extends State<LaporanPenjualanScreen> {
 
   Future getPenjualan() async {
     var pref = await SharedPreferences.getInstance();
-    var id_user = pref.getString('id_user');
+    var idUser = pref.getString('id_user');
     String formattedBeginDate = DateFormat('yyyy-MM-dd').format(begin_date);
     String formattedEndDate = DateFormat('yyyy-MM-dd').format(end_date);
 
     try {
-      var response = await http.get(Uri.parse('${Constants.urlPenjualanReport}?user_id=$id_user&key=${Constants.key}&begin_date=$formattedBeginDate&end_date=$formattedEndDate'));
+      var response = await http.get(Uri.parse('${Constants.urlPenjualanReport}?user_id=$idUser&key=${Constants.key}&begin_date=$formattedBeginDate&end_date=$formattedEndDate'));
       return jsonDecode(response.body);
     } catch (e) {
       print(e);
@@ -46,10 +46,11 @@ class _LaporanPenjualanScreenState extends State<LaporanPenjualanScreen> {
             if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
             if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
 
-            if (snapshot.data == '404')
+            if (snapshot.data == '404') {
               return Center(
                 child: Image.asset('assets/image/no-internet.png'),
               );
+            }
             List dataResponse = snapshot.data;
             int omset = 0;
             for (int i = 0; i < dataResponse.length; i++) {
@@ -64,7 +65,7 @@ class _LaporanPenjualanScreenState extends State<LaporanPenjualanScreen> {
                   child: Row(
                     children: [
                       IconButton(
-                          onPressed: () => Nav.pushReplacement(context, MenuScreen(initialPage: 2)),
+                          onPressed: () => Nav.pushReplacement(context, const MenuScreen(initialPage: 2)),
                           icon: const Icon(
                             Icons.navigate_before,
                             size: 25,
@@ -183,7 +184,7 @@ class _LaporanPenjualanScreenState extends State<LaporanPenjualanScreen> {
                 ));
           },
           borderRadius: BorderRadius.circular(15),
-          child: Container(
+          child: SizedBox(
             width: size.width,
             height: size.height / 12,
             child: Row(
@@ -196,7 +197,7 @@ class _LaporanPenjualanScreenState extends State<LaporanPenjualanScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(dataResponse['name_store'], style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600)),
-                      Text(dataResponse['created_at_trx'].toString().substring(0, 16), style: TextStyle(fontFamily: 'Poppins', fontSize: 10)),
+                      Text(dataResponse['created_at_trx'].toString().substring(0, 16), style: const TextStyle(fontFamily: 'Poppins', fontSize: 10)),
                     ],
                   ),
                 ),
@@ -210,7 +211,7 @@ class _LaporanPenjualanScreenState extends State<LaporanPenjualanScreen> {
                     ),
                     child: Center(
                       child: Text(
-                        ('${numberFormat.format(int.parse(dataResponse['total']))}'),
+                        (numberFormat.format(int.parse(dataResponse['total']))),
                         style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
                       ),
                     ),

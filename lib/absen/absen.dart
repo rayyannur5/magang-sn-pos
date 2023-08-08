@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,9 +12,9 @@ class Absen {
   getOutlet() async {
     try {
       var pref = await SharedPreferences.getInstance();
-      var id_user = pref.get('id_user');
-      print(id_user);
-      var response = await http.get(Uri.parse('${Constants.urlDataOutlet}?key=$id_user'));
+      var idUser = pref.get('id_user');
+      print(idUser);
+      var response = await http.get(Uri.parse('${Constants.urlDataOutlet}?key=$idUser'));
       print(response.body);
       return jsonDecode(response.body);
     } catch (e) {
@@ -27,15 +26,15 @@ class Absen {
   Future<String> cekAbsenHariIni() async {
     try {
       SharedPreferences pref = await SharedPreferences.getInstance();
-      var id_user = pref.getString('id_user');
-      var store_id_active = pref.getString('store_id_active') ?? '0';
-      var response = await http.post(Uri.parse(Constants.urlCekAbsensi), body: {'user_id': id_user, 'key': Constants.key});
+      var idUser = pref.getString('id_user');
+      var storeIdActive = pref.getString('store_id_active') ?? '0';
+      var response = await http.post(Uri.parse(Constants.urlCekAbsensi), body: {'user_id': idUser, 'key': Constants.key});
 
       if (response.body == '2') {
         return 'BELUM_ABSEN_MASUK';
-      } else if (response.body == '1' && store_id_active != '0') {
+      } else if (response.body == '1' && storeIdActive != '0') {
         return 'SUDAH_ABSEN_MASUK';
-      } else if (response.body == '1' && store_id_active == '0') {
+      } else if (response.body == '1' && storeIdActive == '0') {
         return 'SUDAH_ABSEN_KELUAR';
       } else {
         return 'error';
@@ -82,22 +81,22 @@ class Absen {
     }
   }
 
-  Future<String> sendAbsenMasuk(store_id, shift, image_in) async {
+  Future<String> sendAbsenMasuk(storeId, shift, imageIn) async {
     try {
       var pref = await SharedPreferences.getInstance();
-      String id_user = pref.getString('id_user') ?? "0";
+      String idUser = pref.getString('id_user') ?? "0";
       String key = Constants.key;
       var response = await http.post(Uri.parse(Constants.urlAbsenMasuk), body: {
-        'user_id': id_user,
-        'image_in': image_in,
+        'user_id': idUser,
+        'image_in': imageIn,
         'shift': shift.toString(),
-        'store_id': store_id,
+        'store_id': storeId,
         'key': key,
       });
 
       String strResponse = response.body;
       List listResponse = strResponse.split('in***');
-      pref.setString('store_id_active', store_id);
+      pref.setString('store_id_active', storeId);
       pref.setString('shift', shift.toString());
       pref.setString('name_store', listResponse[0]);
       pref.setString('name_store', listResponse[0]);
@@ -114,16 +113,16 @@ class Absen {
     }
   }
 
-  Future sendAbsenKeluar(shift, image_out) async {
+  Future sendAbsenKeluar(shift, imageOut) async {
     try {
       var pref = await SharedPreferences.getInstance();
       pref.setString('store_id_active', '0');
 
-      String id_user = pref.getString('id_user') ?? "0";
+      String idUser = pref.getString('id_user') ?? "0";
       String key = Constants.key;
       var response = await http.post(Uri.parse(Constants.urlAbsenKeluar), body: {
-        'user_id': id_user,
-        'image_out': image_out,
+        'user_id': idUser,
+        'image_out': imageOut,
         'shift': shift.toString(),
         'key': key,
       });
@@ -144,15 +143,15 @@ class Absen {
     return false;
   }
 
-  Future absensiReport(begin_date, end_date) async {
+  Future absensiReport(beginDate, endDate) async {
     print('get absen report');
-    String formattedBeginDate = DateFormat('yyyy-MM-dd').format(begin_date);
-    String formattedEndDate = DateFormat('yyyy-MM-dd').format(end_date);
+    String formattedBeginDate = DateFormat('yyyy-MM-dd').format(beginDate);
+    String formattedEndDate = DateFormat('yyyy-MM-dd').format(endDate);
 
     try {
       var pref = await SharedPreferences.getInstance();
-      var id_user = pref.getString('id_user');
-      var response = await http.get(Uri.parse('${Constants.urlAbsensiReport}?key=${Constants.key}&user_id=$id_user&begin_date=$formattedBeginDate&end_date=$formattedEndDate'));
+      var idUser = pref.getString('id_user');
+      var response = await http.get(Uri.parse('${Constants.urlAbsensiReport}?key=${Constants.key}&user_id=$idUser&begin_date=$formattedBeginDate&end_date=$formattedEndDate'));
       List dataAbsen = jsonDecode(response.body);
       return dataAbsen;
     } catch (e) {

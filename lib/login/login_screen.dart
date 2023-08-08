@@ -132,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               else if (value == '404')
                                 {Nav.materialPushReplacement(context, const NoInternetScreen())}
                               else
-                                {Nav.materialPushReplacement(context, MenuScreen(initialPage: 0))}
+                                {Nav.materialPushReplacement(context, const MenuScreen(initialPage: 0))}
                             });
                       }),
                 ],

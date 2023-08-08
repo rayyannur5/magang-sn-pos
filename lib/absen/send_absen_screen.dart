@@ -38,7 +38,7 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
               print('masuk sini');
               SchedulerBinding.instance.addPostFrameCallback((_) {
                 Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
-                  return NoInternetScreen();
+                  return const NoInternetScreen();
                 }), (r) {
                   return false;
                 });
@@ -84,7 +84,7 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                           if (snapshot.data == '404') {
                             SchedulerBinding.instance.addPostFrameCallback((_) {
                               Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
-                                return NoInternetScreen();
+                                return const NoInternetScreen();
                               }), (r) {
                                 return false;
                               });
@@ -235,10 +235,10 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                               return;
                             }
 
-                            var store_id;
+                            var storeId;
                             for (int i = 0; i < dataOutlet.length; i++) {
                               if (dataOutlet[i]['name_store'] == outletTerpilih) {
-                                store_id = dataOutlet[i]['id_store'];
+                                storeId = dataOutlet[i]['id_store'];
                               }
                             }
                             showDialog(
@@ -248,9 +248,9 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                                 return Dialog(
                                   child: Container(
                                     margin: const EdgeInsets.all(20),
-                                    child: Row(
+                                    child: const Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                      children: const [
+                                      children: [
                                         CircularProgressIndicator(),
                                         Text('Mengirim Absen ', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700)),
                                       ],
@@ -261,12 +261,12 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                             );
 
                             pref.setBool('ready_kirim', true);
-                            Absen().sendAbsenMasuk(store_id, shift, widget.imageName).then((value) {
+                            Absen().sendAbsenMasuk(storeId, shift, widget.imageName).then((value) {
                               if (value == '1') {
                                 itemManagement.setItems([], 0);
                                 Nav.pop(context);
                                 Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
-                                  return MenuScreen(initialPage: 0);
+                                  return const MenuScreen(initialPage: 0);
                                 }), (r) {
                                   return false;
                                 });
@@ -284,9 +284,9 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                                 return Dialog(
                                   child: Container(
                                     margin: const EdgeInsets.all(20),
-                                    child: Row(
+                                    child: const Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                      children: const [
+                                      children: [
                                         CircularProgressIndicator(),
                                         Text('Mengirim Absen ', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700)),
                                       ],
@@ -302,7 +302,7 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                                 Nav.pop(context);
 
                                 Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
-                                  return MenuScreen(initialPage: 0);
+                                  return const MenuScreen(initialPage: 0);
                                 }), (r) {
                                   return false;
                                 });

@@ -14,10 +14,10 @@ class LaporanSetoranScreen extends StatelessWidget {
   final numberFormat = NumberFormat("#,##0", "en_US");
   Future getSetoran() async {
     var pref = await SharedPreferences.getInstance();
-    var id_user = pref.getString('id_user');
+    var idUser = pref.getString('id_user');
 
     try {
-      var response = await http.get(Uri.parse('${Constants.urlSetoranReport}?id_user=$id_user'));
+      var response = await http.get(Uri.parse('${Constants.urlSetoranReport}?id_user=$idUser'));
       var dataResponse = jsonDecode(response.body);
       return dataResponse;
     } catch (e) {
@@ -45,7 +45,7 @@ class LaporanSetoranScreen extends StatelessWidget {
                   child: Row(
                     children: [
                       IconButton(
-                          onPressed: () => Nav.pushReplacement(context, MenuScreen(initialPage: 2)),
+                          onPressed: () => Nav.pushReplacement(context, const MenuScreen(initialPage: 2)),
                           icon: const Icon(
                             Icons.navigate_before,
                             size: 25,
@@ -107,7 +107,7 @@ class LaporanSetoranScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text('Tabungan\n${numberFormat.format(dataResponse['total_tabungan'])}',
-                            textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                            textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
                       ],
                     ),
                   ),
@@ -162,8 +162,8 @@ class LaporanSetoranScreen extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    '${numberFormat.format(int.parse(dataSetoran['total_setor']))}',
-                    style: TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
+                    numberFormat.format(int.parse(dataSetoran['total_setor'])),
+                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
                   ),
                 ),
               ),

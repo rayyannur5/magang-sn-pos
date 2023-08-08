@@ -16,7 +16,7 @@ class NoInternetScreen extends StatelessWidget {
         child: Column(
           children: [
             Image.asset('assets/image/no-internet.png'),
-            Text(error, style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w800)),
+            Text(error, style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w800)),
             const Spacer(),
             GeneralButton(
                 text: 'Refresh',

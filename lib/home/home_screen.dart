@@ -37,18 +37,18 @@ class _HomeScreenState extends State<HomeScreen> {
     print(pref.getKeys());
     for (var i in pref.getKeys()) {
       if (i.contains('TRX')) {
-        var id_user = pref.getString('id_user') ?? 0;
-        var store_id_active = pref.getString('store_id_active');
+        var idUser = pref.getString('id_user') ?? 0;
+        var storeIdActive = pref.getString('store_id_active');
         var shift = pref.getString('shift');
         String qty = (pref.getString(i)!.split('C').length - 1).toString();
         String data = pref.getString(i) ?? '';
         data = data.substring(0, data.length - 1);
         String trx = i.split('-').last;
         try {
-          var resp = await http.get(Uri.parse('${Constants.urlKirimTransaksi}?id=$id_user&shift=$shift&store=$store_id_active&qty=$qty&trx=$trx&data=$data'));
+          var resp = await http.get(Uri.parse('${Constants.urlKirimTransaksi}?id=$idUser&shift=$shift&store=$storeIdActive&qty=$qty&trx=$trx&data=$data'));
           print(resp.body);
           if (resp.body.contains('aytechsuksestransaksi-')) {
-            pref.remove(i);
+            await pref.remove(i);
             setState(() {});
           }
         } catch (e) {
@@ -90,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    timer = Timer.periodic(Duration(seconds: 30), (Timer t) => kirimTRXkeDB());
+    timer = Timer.periodic(const Duration(seconds: 30), (Timer t) => kirimTRXkeDB());
   }
 
   @override
@@ -120,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const Text('Anda Sudah Absen Hari Ini', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins', fontSize: 24, fontWeight: FontWeight.w800)),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: 10),
-                        child: GeneralButton(text: 'Cetak Laporan', onTap: () => Nav.push(context, LaporanTutupShiftScreen())),
+                        child: GeneralButton(text: 'Cetak Laporan', onTap: () => Nav.push(context, const LaporanTutupShiftScreen())),
                       )
                     ],
                   ),
@@ -211,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 children: [
                                                   itemManagement.getPrice() != 0
                                                       ? Text(
-                                                          '${numberFormat.format(itemManagement.getPrice())}',
+                                                          numberFormat.format(itemManagement.getPrice()),
                                                           style: const TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
                                                         )
                                                       : const SizedBox(),
@@ -286,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
               int dataItem = itemManagement.getItem(index);
               itemManagement.setItem(index, dataItem + 1);
               setState(() {});
-              print(title + ' tambah');
+              print('$title tambah');
             },
             child: Row(
               children: [
@@ -301,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       const SizedBox(height: 10),
                       Text(title, style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w700)),
-                      Text('${numberFormat.format(int.parse(price))}', style: const TextStyle(fontFamily: 'Poppins', fontSize: 14)),
+                      Text(numberFormat.format(int.parse(price)), style: const TextStyle(fontFamily: 'Poppins', fontSize: 14)),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -311,7 +311,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     int dataItem = itemManagement.getItem(index);
                                     itemManagement.setItem(index, dataItem - 1);
                                     setState(() {});
-                                    print(title + ' kurang');
+                                    print('$title kurang');
                                   },
                                   child: Image.asset('assets/image/icon-min.png', scale: 1.8))
                               : const SizedBox(),

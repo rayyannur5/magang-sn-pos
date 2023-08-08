@@ -66,7 +66,7 @@ class _CameraScreenState extends State<CameraScreen> {
                             child: IconButton(
                                 onPressed: () {
                                   Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
-                                    return MenuScreen(initialPage: 1);
+                                    return const MenuScreen(initialPage: 1);
                                   }), (r) {
                                     return false;
                                   });
@@ -92,8 +92,8 @@ class _CameraScreenState extends State<CameraScreen> {
 
                                 if (!mounted) return;
 
-                                var id_user = pref.getString('id_user') ?? '0';
-                                int id_user1000 = 1000 + int.parse(id_user);
+                                var idUser = pref.getString('id_user') ?? '0';
+                                int idUser1000 = 1000 + int.parse(idUser);
 
                                 var date = DateTime.now();
                                 var year = date.year.toString();
@@ -103,7 +103,7 @@ class _CameraScreenState extends State<CameraScreen> {
                                 var minute = date.minute < 10 ? '0${date.minute.toString()}' : date.minute.toString();
                                 var second = date.second < 10 ? '0${date.second.toString()}' : date.second.toString();
 
-                                var namaGambar = '$id_user1000$year$month$day$hour$minute$second.jpg';
+                                var namaGambar = '$idUser1000$year$month$day$hour$minute$second.jpg';
 
                                 File newImage = changeFileNameOnlySync(File(image.path), namaGambar);
 
@@ -126,7 +126,7 @@ class _CameraScreenState extends State<CameraScreen> {
                             child: Container(
                               height: 70,
                               width: 70,
-                              decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.lightBlue, border: Border.all(color: Colors.white, strokeAlign: StrokeAlign.outside, width: 4)),
+                              decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.lightBlue, border: Border.all(color: Colors.white, strokeAlign: BorderSide.strokeAlignOutside, width: 4)),
                             ),
                           ),
                           const Spacer(flex: 3)
