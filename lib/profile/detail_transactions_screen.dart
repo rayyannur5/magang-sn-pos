@@ -1,24 +1,21 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:jpeg_encode/jpeg_encode.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:screenshot/screenshot.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_pos/FTP.dart';
 import 'package:sn_pos/constants.dart';
 // ignore: depend_on_referenced_packages
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+import 'package:sn_pos/styles/receipt_widget_pdf.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../styles/general_button.dart';
 import '../styles/navigator.dart';
-import '../styles/receipt_widget.dart';
 
 class DetailTransactionsScreen extends StatefulWidget {
   DetailTransactionsScreen({super.key, required this.store_id, required this.number_trx, required this.date, required this.customer_trx});
@@ -37,8 +34,6 @@ class _DetailTransactionsScreenState extends State<DetailTransactionsScreen> {
   BluetoothDevice? selectedDevice;
   BlueThermalPrinter printer = BlueThermalPrinter.instance;
   bool isConnect = false;
-
-  final ScreenshotController _screenshotController = ScreenshotController();
 
   @override
   void initState() {
@@ -342,18 +337,20 @@ class _DetailTransactionsScreenState extends State<DetailTransactionsScreen> {
                         var formKey = GlobalKey<FormState>();
                         var phone = TextEditingController();
                         try {
-                          showDialog(context: context, builder: (context) => const Center(child: CircularProgressIndicator()));
+                          showDialog(context: context, barrierDismissible: false, builder: (context) => const Center(child: CircularProgressIndicator()));
 
                           var res = await http.post(Uri.parse(Constants.urlCheckRecipe), body: {'no_trx': widget.number_trx});
                           if (res.body == '1') {
                             Nav.pop(context);
-                            sendToWhatsapp(context, formKey, phone, "https://recipe.mirovtech.id/${widget.number_trx}.gif");
+                            sendToWhatsapp(context, formKey, phone, "https://recipe.mirovtech.id/${widget.number_trx}.pdf");
                           } else {
                             Map data = {};
 
                             var pref = await SharedPreferences.getInstance();
-                            data['tanggal'] = DateFormat('d MMMM y | H:m').format(DateTime.parse(widget.date));
+                            data['tanggal'] = DateFormat('d MMMM y | HH:mm').format(DateTime.parse(widget.date));
                             final numberFormat = NumberFormat("#,##0", "en_US");
+
+                            print(data['tanggal']);
 
                             data['id_trx'] = widget.number_trx;
                             data['brand_store'] = pref.getString('brand_store') ?? '';
@@ -371,19 +368,9 @@ class _DetailTransactionsScreenState extends State<DetailTransactionsScreen> {
                               });
                             }
 
-                            var image = await _screenshotController.captureFromLongWidget(receiptWidget(data: data), delay: const Duration(milliseconds: 200));
-
                             final dir = await getTemporaryDirectory();
 
-                            final codec = await instantiateImageCodec(image);
-                            final frame = await codec.getNextFrame();
-                            final tes = frame.image;
-                            final finalImage = await tes.toByteData(format: ImageByteFormat.rawRgba);
-                            final jpg = JpegEncoder().compress(finalImage!.buffer.asUint8List(), tes.width, tes.height, 90);
-                            final file = await File('${dir.path}/${widget.number_trx}.jpg').writeAsBytes(jpg);
-
-                            var formKey = GlobalKey<FormState>();
-                            var phone = TextEditingController();
+                            final file = await File('${dir.path}/${widget.number_trx}.pdf').writeAsBytes(await ReceiptWidgetPDF.makePDF(data));
                             var res = await FTP.sendReceiptFTP(file);
                             if (res['success']) {
                               await http.post(Uri.parse(Constants.urlCreateRecipe), body: {'no_trx': widget.number_trx});

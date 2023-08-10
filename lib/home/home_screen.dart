@@ -33,16 +33,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future kirimTRXkeDB() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
-    print('masuk kirim trx');
-    print(pref.getKeys());
     for (var i in pref.getKeys()) {
       if (i.contains('TRX')) {
         var idUser = pref.getString('id_user') ?? 0;
         var storeIdActive = pref.getString('store_id_active');
         var shift = pref.getString('shift');
-        String qty = (pref.getString(i)!.split('C').length - 1).toString();
+        String qty = (pref.getString(i)!.split('X.X').length - 1).toString();
         String data = pref.getString(i) ?? '';
-        data = data.substring(0, data.length - 1);
         String trx = i.split('-').last;
         try {
           var resp = await http.get(Uri.parse('${Constants.urlKirimTransaksi}?id=$idUser&shift=$shift&store=$storeIdActive&qty=$qty&trx=$trx&data=$data'));
@@ -54,12 +51,11 @@ class _HomeScreenState extends State<HomeScreen> {
         } catch (e) {
           print(e);
           // ignore: use_build_context_synchronously
-          // if (mounted) {
-          //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          //     duration: Duration(seconds: 5),
-          //     content: Text("Transaksi belum terkirim, tidak ada koneksi internet"),
-          //   ));
-          // }
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text("Transaksi belum terkirim, tidak ada koneksi internet\n${e.toString()}"),
+            ));
+          }
         }
       }
     }
@@ -122,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Text(snapshot.data.toString()),
                   ],
                 ),

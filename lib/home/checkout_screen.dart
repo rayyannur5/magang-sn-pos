@@ -23,7 +23,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final numberFormat = NumberFormat("#,##0", "en_US");
   late String id;
 
-  Future bayar(List item, DateTime date) async {
+  Future bayar(List item, DateTime date, noPlat) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     var idUser = pref.getString('id_user') ?? '0';
     int idUser1000 = 1000 + int.parse(idUser);
@@ -40,10 +40,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     String dataTerpilih = "";
     for (int i = 0; i < item.length; i++) {
       for (int j = 0; j < item[i]['count']; j++) {
-        dataTerpilih += '${item[i]['id_produk']}C';
+        dataTerpilih += '${item[i]['id_produk']}X.X';
       }
     }
-    print(dataTerpilih);
+    dataTerpilih += noPlat;
 
     await pref.setString('TRX-$idTrx', dataTerpilih);
     id = 'TRX-$idTrx';
@@ -251,7 +251,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               child: GeneralButton(
                   onTap: () {
                     var date = DateTime.now();
-                    bayar(itemManagement.getItemsSelected(), date).then((value) => Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
+                    bayar(itemManagement.getItemsSelected(), date, plat.text).then((value) => Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
                           return SuccessTransactionScreen(cash: int.tryParse(cash.text) is int ? int.parse(cash.text) : 0, date: date, id: id);
                         }), (r) {
                           return false;

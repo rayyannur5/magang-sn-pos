@@ -73,18 +73,18 @@ class _SendAbsenScreenState extends State<SendAbsenScreen> {
                     child: Image.file(File(widget.imagePath)),
                   ),
                 ),
-                Center(
-                    child: outletTerpilih != 'Pilih Outlet'
-                        ? Container(
-                            height: 20,
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                            decoration: BoxDecoration(color: distance! > 50 ? Colors.redAccent : Colors.green, borderRadius: BorderRadius.circular(10)),
-                            child: Text(
-                              distance! > 50 ? 'Diluar Jangkauan' : 'Didalam Jangkauan',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          )
-                        : const SizedBox(height: 20)),
+                // Center(
+                //     child: outletTerpilih != 'Pilih Outlet'
+                //         ? Container(
+                //             height: 20,
+                //             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                //             decoration: BoxDecoration(color: distance! > 50 ? Colors.redAccent : Colors.green, borderRadius: BorderRadius.circular(10)),
+                //             child: Text(
+                //               distance! > 50 ? 'Diluar Jangkauan' : 'Didalam Jangkauan',
+                //               style: const TextStyle(color: Colors.white),
+                //             ),
+                //           )
+                //         : const SizedBox(height: 20)),
                 cekAbsen.data != 'SUDAH_ABSEN_MASUK'
                     ? Padding(
                         padding: EdgeInsets.symmetric(horizontal: size.width / 15, vertical: 10),

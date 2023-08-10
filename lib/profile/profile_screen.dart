@@ -120,7 +120,7 @@ class ProfileScreen extends StatelessWidget {
               child: Material(
                 color: Colors.white,
                 child: InkWell(
-                  onTap: () => Nav.push(context, ReportTambahan()),
+                  onTap: () => Nav.push(context, const ReportTambahanScreen()),
                   child: Container(
                     width: size.width,
                     height: size.height / 20,

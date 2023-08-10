@@ -1,26 +1,23 @@
 // import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:jpeg_encode/jpeg_encode.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:screenshot/screenshot.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_pos/constants.dart';
 import 'package:sn_pos/home/itemProvider.dart';
 import 'package:sn_pos/menu.dart';
 import 'package:sn_pos/styles/general_button.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+import 'package:sn_pos/styles/receipt_widget_pdf.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
 
 import '../FTP.dart';
 import '../styles/navigator.dart';
-import '../styles/receipt_widget.dart';
 
 class SuccessTransactionScreen extends StatefulWidget {
   const SuccessTransactionScreen({super.key, required this.cash, required this.date, required this.id});
@@ -37,8 +34,6 @@ class _SuccessTransactionScreenState extends State<SuccessTransactionScreen> {
   List<BluetoothDevice> devices = [];
   BluetoothDevice? selectedDevice;
   BlueThermalPrinter printer = BlueThermalPrinter.instance;
-
-  final ScreenshotController _screenshotController = ScreenshotController();
 
   bool isConnect = false;
 
@@ -351,17 +346,18 @@ class _SuccessTransactionScreenState extends State<SuccessTransactionScreen> {
                     var phone = TextEditingController();
 
                     try {
-                      showDialog(context: context, builder: (context) => const Center(child: CircularProgressIndicator()));
+                      showDialog(context: context, barrierDismissible: false, builder: (context) => const Center(child: CircularProgressIndicator()));
 
                       var res = await http.post(Uri.parse(Constants.urlCheckRecipe), body: {'no_trx': widget.id});
                       if (res.body == '1') {
                         Nav.pop(context);
-                        sendToWhatsapp(context, formKey, phone, "https://recipe.mirovtech.id/${widget.id}.gif");
+                        sendToWhatsapp(context, formKey, phone, "https://recipe.mirovtech.id/${widget.id}.pdf");
                       } else {
                         Map data = {};
 
                         var pref = await SharedPreferences.getInstance();
-                        data['tanggal'] = DateFormat('d MMMM y | H:m').format(widget.date);
+                        data['tanggal'] = DateFormat('d MMMM y | HH:mm').format(widget.date);
+
                         final numberFormat = NumberFormat("#,##0", "en_US");
 
                         data['id_trx'] = widget.id;
@@ -380,16 +376,9 @@ class _SuccessTransactionScreenState extends State<SuccessTransactionScreen> {
                           });
                         }
 
-                        var image = await _screenshotController.captureFromLongWidget(receiptWidget(data: data), delay: const Duration(milliseconds: 200));
-
                         final dir = await getTemporaryDirectory();
 
-                        final codec = await instantiateImageCodec(image);
-                        final frame = await codec.getNextFrame();
-                        final tes = frame.image;
-                        final finalImage = await tes.toByteData(format: ImageByteFormat.rawRgba);
-                        final jpg = JpegEncoder().compress(finalImage!.buffer.asUint8List(), tes.width, tes.height, 90);
-                        final file = await File('${dir.path}/${widget.id}.jpg').writeAsBytes(jpg);
+                        final file = await File('${dir.path}/${widget.id}.pdf').writeAsBytes(await ReceiptWidgetPDF.makePDF(data));
 
                         var res = await FTP.sendReceiptFTP(file);
                         if (res['success']) {

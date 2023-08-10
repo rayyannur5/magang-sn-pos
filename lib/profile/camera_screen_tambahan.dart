@@ -3,12 +3,10 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sn_pos/absen/send_absen_screen.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:sn_pos/profile/report_tambahan_screen.dart';
 import 'package:sn_pos/profile/send_report_tambahan_screen.dart';
-
-import '../menu.dart';
+import 'package:sn_pos/styles/navigator.dart';
 
 class CameraScreenTambahan extends StatefulWidget {
   const CameraScreenTambahan({super.key});
@@ -22,9 +20,12 @@ class _CameraScreenTambahanState extends State<CameraScreenTambahan> {
 
   Future<void> initializeCamera() async {
     var cameras = await availableCameras();
-    controller = CameraController(cameras[1], ResolutionPreset.low);
+    print(switchCamera);
+    controller = CameraController(cameras[switchCamera], ResolutionPreset.low);
     await controller.initialize();
   }
+
+  int switchCamera = 0;
 
   @override
   void dispose() {
@@ -77,122 +78,135 @@ class _CameraScreenTambahanState extends State<CameraScreenTambahan> {
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: FutureBuilder<Position>(
-          future: getPosition(),
-          builder: (context, position) {
-            if (position.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-            print(position.data);
-            return FutureBuilder(
-              future: initializeCamera(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  return Stack(
-                    children: [
-                      Column(
-                        children: [
-                          SizedBox(
-                            width: size.height,
-                            height: size.width * controller.value.aspectRatio,
-                            child: CameraPreview(controller),
-                          ),
-                          Container(
-                            height: size.height - (size.width * controller.value.aspectRatio),
-                            alignment: Alignment.center,
-                            child: Row(
-                              children: [
-                                const Spacer(),
-                                SizedBox(
+    return WillPopScope(
+      onWillPop: () async {
+        Nav.pushReplacement(context, const ReportTambahanScreen());
+        return true;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: FutureBuilder<Position>(
+            future: getPosition(),
+            builder: (context, position) {
+              if (position.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+              print(position.data);
+              return FutureBuilder(
+                future: initializeCamera(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return Column(
+                      children: [
+                        SizedBox(
+                          width: size.height,
+                          height: size.width * controller.value.aspectRatio,
+                          child: CameraPreview(controller),
+                        ),
+                        Container(
+                          height: size.height - (size.width * controller.value.aspectRatio),
+                          alignment: Alignment.center,
+                          child: Row(
+                            children: [
+                              const Spacer(),
+                              SizedBox(
+                                height: 70,
+                                width: 70,
+                                child: IconButton(
+                                    onPressed: () {
+                                      Nav.pushReplacement(context, const ReportTambahanScreen());
+                                    },
+                                    icon: const Icon(
+                                      Icons.cancel,
+                                      color: Colors.white,
+                                      size: 50,
+                                    )),
+                              ),
+                              const Spacer(),
+                              GestureDetector(
+                                onTap: () async {
+                                  // Take the Picture in a try / catch block. If anything goes wrong,
+                                  // catch the error.
+                                  print('take picture');
+                                  try {
+                                    // Attempt to take a picture and get the file `image`
+                                    // where it was saved.
+                                    final image = await controller.takePicture();
+
+                                    var pref = await SharedPreferences.getInstance();
+
+                                    if (!mounted) return;
+
+                                    var idUser = pref.getString('id_user') ?? '0';
+                                    int idUser1000 = 1000 + int.parse(idUser);
+
+                                    var date = DateTime.now();
+                                    var year = date.year.toString();
+                                    var month = date.month < 10 ? '0${date.month.toString()}' : date.month.toString();
+                                    var day = date.day < 10 ? '0${date.day.toString()}' : date.day.toString();
+                                    var hour = date.hour < 10 ? '0${date.hour.toString()}' : date.hour.toString();
+                                    var minute = date.minute < 10 ? '0${date.minute.toString()}' : date.minute.toString();
+                                    var second = date.second < 10 ? '0${date.second.toString()}' : date.second.toString();
+
+                                    var namaGambar = 'RPT_$idUser1000$year$month$day$hour$minute$second.jpg';
+
+                                    File newImage = changeFileNameOnlySync(File(image.path), namaGambar);
+
+                                    // If the picture was taken, display it on a new screen.
+                                    await Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                        builder: (context) => SendReportTambahanScreen(
+                                          imagePath: newImage.path,
+                                          imageName: namaGambar,
+                                          position: position.data!,
+                                        ),
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    // If an error occurs, log the error to the console.
+                                    print(e);
+                                  }
+                                },
+                                child: Container(
                                   height: 70,
                                   width: 70,
-                                  child: IconButton(
-                                      onPressed: () {
-                                        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (BuildContext context) {
-                                          return MenuScreen(initialPage: 2);
-                                        }), (r) {
-                                          return false;
+                                  decoration:
+                                      BoxDecoration(shape: BoxShape.circle, color: Colors.lightBlue, border: Border.all(color: Colors.white, strokeAlign: BorderSide.strokeAlignOutside, width: 4)),
+                                ),
+                              ),
+                              const Spacer(),
+                              SizedBox(
+                                height: 70,
+                                width: 70,
+                                child: IconButton(
+                                    onPressed: () {
+                                      if (switchCamera == 1) {
+                                        setState(() {
+                                          switchCamera = 0;
                                         });
-                                      },
-                                      icon: const Icon(
-                                        Icons.cancel,
-                                        color: Colors.white,
-                                        size: 50,
-                                      )),
-                                ),
-                                const Spacer(),
-                                GestureDetector(
-                                  onTap: () async {
-                                    // Take the Picture in a try / catch block. If anything goes wrong,
-                                    // catch the error.
-                                    print('take picture');
-                                    try {
-                                      // Attempt to take a picture and get the file `image`
-                                      // where it was saved.
-                                      final image = await controller.takePicture();
-
-                                      var pref = await SharedPreferences.getInstance();
-
-                                      if (!mounted) return;
-
-                                      var id_user = pref.getString('id_user') ?? '0';
-                                      int id_user1000 = 1000 + int.parse(id_user);
-
-                                      var date = DateTime.now();
-                                      var year = date.year.toString();
-                                      var month = date.month < 10 ? '0${date.month.toString()}' : date.month.toString();
-                                      var day = date.day < 10 ? '0${date.day.toString()}' : date.day.toString();
-                                      var hour = date.hour < 10 ? '0${date.hour.toString()}' : date.hour.toString();
-                                      var minute = date.minute < 10 ? '0${date.minute.toString()}' : date.minute.toString();
-                                      var second = date.second < 10 ? '0${date.second.toString()}' : date.second.toString();
-
-                                      var namaGambar = '$id_user1000$year$month$day$hour$minute$second.jpg';
-
-                                      File newImage = changeFileNameOnlySync(File(image.path), namaGambar);
-
-                                      pref.setString("gambar_absen_path", newImage.path);
-                                      pref.setString("gambar_absen", namaGambar);
-                                      // If the picture was taken, display it on a new screen.
-                                      await Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (context) => SendReportTambahanScreen(
-                                            imagePath: newImage.path,
-                                            imageName: namaGambar,
-                                            position: position.data!,
-                                          ),
-                                        ),
-                                      );
-                                    } catch (e) {
-                                      // If an error occurs, log the error to the console.
-                                      print(e);
-                                    }
-                                  },
-                                  child: Container(
-                                    height: 70,
-                                    width: 70,
-                                    decoration:
-                                        BoxDecoration(shape: BoxShape.circle, color: Colors.lightBlue, border: Border.all(color: Colors.white, strokeAlign: BorderSide.strokeAlignOutside, width: 4)),
-                                  ),
-                                ),
-                                const Spacer(flex: 3)
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                      Container(
-                        width: size.height,
-                        height: size.width * controller.value.aspectRatio,
-                        decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/image/face-screen.png'), fit: BoxFit.fill)),
-                      ),
-                    ],
-                  );
-                } else {
-                  return const Center(child: CircularProgressIndicator());
-                }
-              },
-            );
-          }),
+                                      } else {
+                                        setState(() {
+                                          switchCamera = 1;
+                                        });
+                                      }
+                                    },
+                                    icon: const Icon(
+                                      Icons.cameraswitch_rounded,
+                                      color: Colors.white,
+                                      size: 50,
+                                    )),
+                              ),
+                              const Spacer()
+                            ],
+                          ),
+                        )
+                      ],
+                    );
+                  } else {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                },
+              );
+            }),
+      ),
     );
   }
 }
